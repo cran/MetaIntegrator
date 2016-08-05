@@ -1,0 +1,25 @@
+Package: MetaIntegrator
+Type: Package
+Title: MetaIntegrator- Meta-Analysis of Gene Expression Data
+Version: 1.0.0
+Date: 2016-07-28
+Author: Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy Sweeney,
+    Erika Bongen, Purvesh Khatri
+Maintainer: Winston A. Haynes <hayneswa@stanford.edu>
+Description: A pipeline for the meta-analysis  of gene expression data. We have
+	assembled several analysis and plot functions to
+    perform integrated multi-cohort analysis of gene expression data (meta-
+    analysis).
+License: LGPL
+Imports: rmeta, multtest, ggplot2, parallel, Rmisc, reshape, gplots,
+        Biobase, RMySQL, DBI, stringr, preprocessCore, GEOquery,
+        GEOmetadb, RSQLite
+Suggests: BiocStyle, knitr, rmarkdown, RUnit, BiocGenerics
+VignetteBuilder: knitr
+LazyData: true
+RoxygenNote: 5.0.1
+NeedsCompilation: no
+Packaged: 2016-08-04 23:58:44 UTC; hayneswa
+Depends: R (>= 2.10)
+Repository: CRAN
+Date/Publication: 2016-08-05 11:53:08

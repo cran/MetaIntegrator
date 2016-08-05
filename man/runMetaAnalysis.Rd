@@ -1,0 +1,49 @@
+\name{runMetaAnalysis}
+\alias{runMetaAnalysis}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Run the meta-analysis algorithm 
+}
+\description{
+Given a \code{metaObject} with \code{$originalData} populated this function will run the meta-analysis algorithm.      
+
+It returns a modified version of the \code{metaObject} with the meta-analysis results written into \code{metaObject$metaAnalysis} and the results of the leave-one-out analysis into \code{metaObject$leaveOneOutAnalysis}
+}
+\usage{
+runMetaAnalysis(metaObject, runLeaveOneOutAnalysis= TRUE, maxCores=Inf)
+}
+
+\arguments{
+  \item{metaObject}{
+  a metaObject which must have \code{metaObject$originalData} populated with a list of \code{datasetObjects} that will be used for discovery
+  }
+  \item{runLeaveOneOutAnalysis}{
+  	TRUE to run leave one out analysis, FALSE otherwise (default: TRUE)
+  }
+  \item{maxCores}{
+  	maximum number of cores to use during analysis (default: Inf)
+  }
+}
+\value{
+ \item{metaObject}{modified version of the \code{metaObject} with \code{$metaAnalysis} and \code{$leaveOneOutAnalysis} populated}
+}
+\author{
+	Francesco Vallania
+}
+
+\section{Warning}{
+To make sure the input is correctly formatted, the input \code{metaObject} should be checked with \code{checkDataObject(metaObject, "Meta", "Pre-Analysis")} before starting the meta-analysis.
+} 
+
+\seealso{
+\code{\link{checkDataObject}}
+}
+\examples{
+#Run a meta analysis. 
+#		maxCores is set to 1 for package guideline compliance. 
+#		For personal purposes, leave parameter un-set.
+runMetaAnalysis(tinyMetaObject, maxCores=1)
+}
+
+\keyword{ methods }
+

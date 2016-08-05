@@ -1,0 +1,8 @@
+exportPattern("^[[:alpha:]]+")
+import(reshape, rmeta, multtest, ggplot2, parallel, Rmisc, GEOquery, GEOmetadb, preprocessCore, Biobase, DBI, stringr)
+importFrom(gplots, heatmap.2)
+importFrom(RMySQL, MySQL)
+importFrom(RSQLite, SQLite)
+importFrom("grDevices", "colorRampPalette")
+importFrom("stats", "cor", "na.omit", "p.adjust", "pchisq", "pnorm",
+           "pt", "qqnorm", "sd", "wilcox.test") 

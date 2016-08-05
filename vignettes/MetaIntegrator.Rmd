@@ -1,0 +1,610 @@
+---
+title: "Vignette MetaIntegrator"
+date: "`r Sys.Date()`"
+author: "Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy E. Sweeney, Erika Bongen, Purvesh Khatri"
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_depth: 4
+vignette: >
+  %\VignetteIndexEntry{Analysis of gene expression data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignettePackage{MetaIntegrator}
+  %\VignetteKeyword{bioinformatics}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r import package, message=FALSE, echo=FALSE, warning=FALSE}
+#setwd("../")
+library(MetaIntegrator) # <- import library
+
+# set to TRUE if R code should be executed 
+eval=TRUE
+```
+
+```{r style, echo = FALSE, results = 'asis', warning=FALSE, message=FALSE}
+BiocStyle::markdown()
+```
+
+
+```{r env, message=FALSE, echo=FALSE}
+# Biocpkg("IRanges")
+```
+
+
+
+## Introduction
+
+The MetaIntegrator package comprises several analysis and plot functions to perform integrated multi-cohort analysis of gene expression data (meta-analysis). The advent of the gene expression microarray has allowed for a rapid increase in gene expression studies. Largely due to the MIAME standards for data sharing, many of these studies have been deposited into public repositories such as the NIH Gene Expression Omnibus (GEO) and ArrayExpress. There is now a wealth of publically available gene expression data available for re-analysis. 
+
+An obvious next step to increase statistical power in detecting changes in gene expression associated with some condition is to aggregate data from multiple studies. However, inter-study technical and biological differences prevent us from simply pooling results and summarizing our findings. A random-effects model of meta-analysis circumvents these issues by assuming that the results from each study is drawn from a single distribution, and that such inter-study differences are thus a 'random effect'. Thus, the MetaIntegrator package will perform a DerSimonian & Laird random-effects meta-analysis for each gene (not probeset) between all target studies between cases and controls; it also performs a Fischers sum-of-logs method on the same data, and requires that a gene is significant by both methods. The resulting p-values are False discovery rate (FDR) corrected to q-values, and will evaluate the hypothesis of whether each gene is differentially expressed between cases and controls across all studies included in the analysis. 
+
+The resulting list of genes with significantly different expression between cases and controls can be used for multiple purposes, such as (1) a new diagnostic or prognostic test for the disease of interest, (2) a better understanding of the underlying biology, (3) identification of therapeutic targets, and multiple other applications. Our lab has already used these methods in a wide variety of diseases, including organ transplant reject, lung cancer, neurodegenerative disease, and sepsis ([Khatri et al., J Exp Med 2013](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3804941/); [Chen et al, Cancer Res 2014](http://cancerres.aacrjournals.org/content/74/10/2892.long); [Li et al., Acta Neur Comm 2014](http://www.actaneurocomms.org/content/2/1/93); Sweeney et al, Sci Trans Med 2015). 
+
+The MetaIntegrator Vignette will take the user through the basic steps of the package, including basic multi-cohort analysis, leave-one-out (LOO) analysis (whereby each of the included datasets is left out and multi-cohort analysis is run on the remaining datasets in a round-robin fashion), selection of significant genes, and then analysis of the gene set. The MetaIntegrator package assumes that the user (1) already has their data in hand, and (2) has already decided which datasets to include in the multi-cohort meta-analysis. Our group recommends that some datasets be left out of the analysis, if possible, for independent validation. 
+
+
+
+**Contact**    
+Winston A. Haynes <hayneswa@stanford.edu>
+
+**Links**    
+
+* Package on bitbucket: [`MetaIntegrator`](https://bitbucket.org/khatrilab/metaintegrator_public)
+
+**Installation**    
+```
+install.packages("MetaIntegrator")
+```
+
+## The Meta-Analysis Algorithm   
+
+### Meta-analysis of gene expression data   
+The Metaintegrator package can be used to run a meta-analysis on microarray gene expression data as described in [Khatri et al. J Exp Med. 2013](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3804941/). Briefly, it computes an Hedges’ g effect size for each gene in each dataset defined as:
+
+![Eq1](images/Eq1.png)
+
+where $1$ and $0$ represent the group of cases and controls for a given condition, respectively. For each gene, the summary effect size $g_s$ is computed using a random effect model as:
+
+![Eq2](images/Eq2.png)
+
+where $W_i$ is a weight equal to $1/(V_i+T^2)$, where $V_i$ is the variance of that gene within a given dataset $i$, and $T^{2}$ is the inter-dataset variation (for details see: [Borenstein M et al Introduction to Meta-analysis, Wiley 2009](http://www.wiley.com/WileyCDA/WileyTitle/productCd-EHEP002313.html)). For each gene, the False discovery rate (FDR) is computed and a final set of genes is selected based on FDR thresholding.
+
+### Computation of a signature score
+For a set of signature genes, a signature score can be computed as: 
+
+![Eq3](images/Eq3.png)
+
+where $pos$ and $neg$ are the sets of positive and negative genes, respectively, and $x_i(gene)$ is the expression of any particular gene in sample $i$ (a positive score indicates an association with cases and a negative score with controls). This score $S$ is then converted into a z-score $Z_s$ as:
+
+![Eq4](images/Eq4.png)
+
+
+## Overview Meta-Analysis workflow
+**1. Data collection, curation and annotation, select datasets for discovery and validation:     _Helper Functions_**   
+**2. Meta-analysis on discovery datasets:     _Meta-Analysis, Filtering, Validation, Visualization, Search, Helper Functions_**   
+**3. Validation on independent validation datasets:     _Visualization, Validation, Helper Functions_**    
+
+![Eq5](images/schema_simplified2.png)
+
+
+## Performing a Meta-Analysis using the MetaIntegrator package
+
+### 1. Create a `metaObject` as input for analysis
+
+#### Collect gene expression data 
+
+* search gene expression experiments of interest at [GEO](http://www.ncbi.nlm.nih.gov/geo/) or [ArrayExpress](http://www.ncbi.nlm.nih.gov/pubmed/12519949) 
+* download the DataSet SOFT files for experiments
+
+#### Create a `datasetObject` for each gene expression [GEO dataset](http://www.ncbi.nlm.nih.gov/geo/info/datasets.html) 
+
+* unzip and open the DataSet SOFT file 
+* extract and reformat expression and phenotype information using e.g. a spreadsheet application such as MS Excel 
+* populate expression (`datasetObject$expr`) and phenotype (`datasetObject$pheno`) information using the `read.table()` function in `R`
+* set the `datasetObject$class` vector using the phenotype information (0 is control, 1 is case)
+* provide mapping of array probe IDs to gene names for the microarray platform used in the experiment in the `datasetObject$keys` vector. Mappings are usually stored in GPL files (for format details see [GEO Platform guidelines](http://www.ncbi.nlm.nih.gov/geo/info/platform.html)).
+* set name of the dataset in `datasetObject$formattedName`
+
+The final [`datasetObject`][] should have the structure:
+```
+datasetObject: named list
+  $class: named vector. Names are sample names. Values are 0 if control, 1 if case.
+  $expr: matrix. Row names are probe names. Column names are sample names. Values are expression values
+  $keys: named vector. Names are probe names. Values are gene names.
+  $pheno: data frame. Row names are the sample names. Column names are the annotation information (none required).
+  $formattedName: string. A formatted name for this dataset which will be used in plots.
+```
+**Example object structure for one `datasetObject` from `tinyMetaObject`:** 
+```{r example dsobj, eval=eval}
+dataObj1 <- tinyMetaObject$originalData$PBMC.Study.1
+str(dataObj1, max.level = 1)
+```
+
+**Note: Gene expression values in `dataObj1$expr` should be in $log_2$ scale and the expression data might need normalization. Also, negative gene expression values are problematic for geometric mean calculation.** 
+
+This can be checked by generating a boxplot of the dataset expression values: 
+```{r checkExpression, eval=eval, fig.height=4, fig.width=10}
+boxplot(dataObj1$expr[,1:15]) # -> shows samples 1-15, to see all run: boxplot(dataObj1$expr) 
+```
+Here, normalization is not necessary because the median of the samples is similar, and the data is already in log scale because the expression values are between 0 and 15. (If negative expression values would be observed e.g. the lowest expression value is -1, we recommend to shift all expression values of the dataset above 0 by adding +1 to each gene expression measurement in all samples.)   
+
+#### Check your `datasetObject` using [`checkDataObject()`][]
+
+The function checks for errors within the `datasetObject`. I returns `TRUE` if the object passed error checking, `FALSE` otherwise, and it prints warning messages explaining failed checks.
+
+```{r check1, eval=eval}
+checkDataObject(dataObj1, "Dataset")
+```
+
+
+#### Create `metaObject` from dataset objects 
+
+Generate a named list of dataset objects that have been imported for analysis:
+
+```{r example disc_data, eval=eval}
+# use the additional 2 example datasets from tinyMetaObject
+dataObj2 = tinyMetaObject$originalData$Whole.Blood.Study.1
+dataObj3 = tinyMetaObject$originalData$Whole.Blood.Study.2
+# and create the metaObject
+discovery_datasets <- list(dataObj1, dataObj2, dataObj3)
+names(discovery_datasets) = c(dataObj1$formattedName, dataObj2$formattedName, dataObj3$formattedName)
+exampleMetaObj=list() 
+exampleMetaObj$originalData <- discovery_datasets
+```
+
+**IMPORTANT: Keep at least one dataset out of the discovery datasets to use it for validation!**
+
+The final [`metaObject`][] should have the structure:
+```
+metaObject: named list
+  $originalData: named list [1]
+      $datasetName: Dataset object. 'datasetName' will be the (unquoted) name of that dataset.[0,n]
+```
+
+#### Optional: Check your `metaObject` before MetaAnalysis using [`checkDataObject()`][]
+
+The function checks for errors within the `metaObject`.
+
+**Example how to check your `metaObject`:**
+```{r check2, eval=TRUE}
+checkDataObject(exampleMetaObj, "Meta", "Pre-Analysis")
+```
+
+### 2. Run Meta-Analysis on discovery cohorts
+#### Run Meta-Analysis with [`runMetaAnalysis()`][]
+
+Once the data is written to `metaObject$originalData`, the Meta-Analysis can be started by:
+
+```
+runMetaAnalysis(metaObject)
+```
+The Meta-Analysis results are written into `metaObject$metaAnalysis` and the results of the leave-one-out analysis into `metaObject$leaveOneOutAnalysis` 
+For details [see Meta-Analysis algorithm above][Meta-analysis of gene expression data]
+
+**Example:**
+```{r runMetaAnalysis1, eval=eval, message=FALSE, warning=FALSE}
+exampleMetaObj <- runMetaAnalysis(exampleMetaObj, maxCores=1)
+```
+
+The generated effect size plot compares the effect size distributions of the datasets used in the Meta-Analysis. Ideally, the effect sizes should have a normal distribution around 0.
+
+**Check if the result has been written into `$metaAnalysis` and `$leaveOneOutAnalysis`:**
+```{r runMetaAnalysis2, eval=eval, message=FALSE, warning=FALSE}
+str(exampleMetaObj, max.level = 2)
+```
+
+#### Filter out significant genes from meta-analysis results with [`filterGenes()`][] 
+
+After the Meta-Analysis results have been written to the `metaObject`, they can be examined using different gene filter criteria with [`filterGenes()`][]. The standard filterParameter are the FDR cutoff and leave-one-out analysis on/off:
+  : `FDRThresh`: FDR cutoff: a gene is selected, if it has a p-value less than or equal to the FDR cutoff (default: `0.05`)    
+  : `isLeaveOneOut`: Do leave-one-out analysis on discovery datasets (default: `TRUE`). Needs at least 2 datasets for discovery.    
+      (Detailed optional parameter see:  [`filterGenes()`][])
+
+
+**Example:**
+```{r filterGenes, eval=eval}
+exampleMetaObj <- filterGenes(exampleMetaObj, isLeaveOneOut = TRUE, FDRThresh = 0.001)
+```
+
+
+### 3. Validatation on independent validation cohorts
+
+#### Summarize filtered meta-analysis results with [`summarizeFilterResults()`][] 
+
+Either use the filter label as input for `summarizeFilterResults()`
+```{r summarizeFilterResults1, eval=FALSE}
+summarizeFilterResults(exampleMetaObj, "FDR0.001_es0_nStudies1_looaTRUE_hetero0")
+```
+Or use the most recent filter with the function [`getMostRecentFilter()`][] 
+```{r summarizeFilterResults2, eval=eval}
+summarizeFilterResults(exampleMetaObj, getMostRecentFilter(exampleMetaObj))
+```
+
+#### Generate a violin plot for a validation `datasetObject` with [`violinPlot()`][]
+
+A violin plot is similar to a box plot, except the width of each violin is proportional to the density of points. It can be used to validate how well the selected gene set can be used to separate the groups (e.g. cases vs. controls). P-values are calculated and displayed on the plots.
+
+**Example:**
+```{r violinPlot, message=FALSE, warning=FALSE, eval=eval, fig.height=8, fig.width=8}
+violinPlot(exampleMetaObj$filterResults$FDR0.001_es0_nStudies1_looaTRUE_hetero0, dataObj2, labelColumn = 'group')
+```
+**Note: usually the validation would be performed on an independent validation dataset not like here on the discovery `dataObj2`!**
+
+#### Generate a ROC plot for a validation `datasetObject` with [`rocPlot()`][]
+
+In addition, a ROC plot can be generated to validate how well the groups (e.g. cases vs. controls) can be separated with the selected gene set. The function `rocPlot()` returns a standard ROC plot, with area under the curve (AUC) and 95% confidence interval (CI) calculated according to Hanley method [(Hanley et al, 1982)](http://www.ncbi.nlm.nih.gov/pubmed/7063747).
+
+**Example:**
+```{r rocPlot, eval=eval, fig.height=8, fig.width=8}
+rocPlot(exampleMetaObj$filterResults$FDR0.001_es0_nStudies1_looaTRUE_hetero0, dataObj2, title = "ROC plot for discovery dataset2, FDR: 0.001")
+```
+**Note: Usually the validation would be performed on an independent validation dataset not like here on the discovery `dataObj2`!**
+
+#### Generate forest plot for gene of interest with [`forestPlot()`][]
+
+A forest plot can be used to compare the expression values of a gene across different datasets. The size of the blue boxes is proportional to the number of samples in the study and light blue lines indicate the standard error of the effect sizes for each study (95% confidence interval). The summary effect size for all studies is indicated as yellow diamond below and the width of the diamond indicates the summary standard error.
+
+**Example:**
+```{r forestPlot, eval=eval, fig.height=5, fig.width=7}
+forestPlot(exampleMetaObj, "Gene27")
+```
+
+
+#### Optional: Calculate signature score for gene sets with  [`calculateScore()`][]
+
+Given a gene set of interest, it is often desirable to summarize the expression of that gene set using a single integrated signature score ([for details see above][Computation of a signature score]). The method [`calculateScore()`][] calculates the geometric mean of the expression level of all positive genes, minus the geometric mean of the expression level of all negative genes. Although mostly used internally (e.g. to calculate the Z-scores for [`violinPlot()`][]), the function has been exported in case users want to compare multiple classes, etc., using the same Z-score as is used for producing two-class comparisons. 
+
+**Example:**
+```{r calculateScore, eval=eval}
+calculateScore(exampleMetaObj$filterResults$FDR0.001_es0_nStudies1_looaTRUE_hetero0, dataObj2)
+```
+Typically, this vector would be added as `$score` column in `datasetObject$pheno`.
+
+
+## Overview objects and functions  
+
+### MetaIntegrator objects 
+
+#### `metaObject`
+ 
+The `metaObject` contains all input and output data of the Meta-Analysis
+
+```
+metaObject: named list
+  $originalData: named list [1]
+       $datasetName: datasetObject. 'datasetName' will be the (unquoted) name of that dataset.[0,n]
+  $metaAnalysis: MetaAnalysisObject. Corresponds to the meta-analysis results including all data in originalData [0,1]
+  $leaveOneOutAnalysis: named list [0,1]
+       $removed_datasetName: MetaAnalysisObject. 'datasetName' will be name of removed dataset in LOOA. [0,n]
+  $filterResults: named list [0,1]
+       $filterCriteria: filterObject. 'filterCriteria' will be a string representation of the filter criteria. [0,n]
+```
+
+
+#### `datasetObject`
+
+The `datasetObject` contains all information of one GEO gene expression dataset
+
+```
+datasetObject: named list
+  $class: named vector. Names are sample names. Values are 0 if control, 1 if case.
+  $expr: matrix. Row names are probe names. Column names are sample names. Values are expression values
+  $keys: named vector. Names are probe names. Values are gene names.
+  $pheno: data frame. Row names are the sample names. Column names are the annotation information (none required).
+  $formattedName: string. A formatted name for this dataset which will be used in plots.
+```
+
+
+#### `MetaAnalysisObject`
+ 
+Object that contains results of one Meta-Analysis generated by [`runMetaAnalysis()`][] and stored in `metaObject$metaAnalysis` and `metaObject$leaveOneOutAnalysis`
+
+```
+MetaAnalysisObject: named list
+  $datasetEffectSizes: data frame. Column names are dataset names. Row names are gene names. Values are dataset-specific effect sizes.
+  $datasetEffectSizeStandardErrors: data frame. Column names are dataset names. Row names are gene names. Values are dataset-specific effect size standard errors.
+  $pooledResults: data frame. Row names are gene names. Column names are:
+      $effectSize: double. pooled.ES$summary
+      $effectSizeStandardError: double. Non-negative.   
+      $effectSizePval: double. Ranges from 0 to 1.       
+      $effectSizeFDR: double. Ranges from 0 to 1.        
+      $tauSquared: double. Non-negative.                 
+      $numStudies: integer. Non-negative.                
+      $cochranesQ: double. Non-negative.                 
+      $heterogeneityPval: double. Ranges from 0 to 1.    
+      $fisherStatUp: double. Non-negative.               
+      $fisherPvalUp: double. Ranges from 0 to 1.         
+      $fisherFDRUp: double. Ranges from 0 to 1.
+      $fisherStatDown: double. Non-negative.            
+      $fisherPvalDown: double. Ranges from 0 to 1.       
+      $fisherFDRDown: double. Ranges from 0 to 1.
+  $analysisDescription: string. Describes details of meta-analysis applied.
+```
+
+
+#### `filterObject`
+ 
+Object that contains filter results of one Meta-Analysis generated by [`filterGenes()`][] and stored in `metaObject$filterResults`
+
+```
+filterObject: named list
+  $posGeneNames: character vector. Values are positively-regulated gene names which passed the filter.
+  $negGeneNames: character vector. Values are negatively-regulated gene names which passed the filter.
+  $FDRThresh: double. Ranges from 0 to 1.
+  $effectSizeThresh: double. Non-negative.
+  $numberStudiesThresh: integer. Non-negative.
+  $isLeaveOneOut: boolean.
+  $heterogeneityPvalThresh: double. Ranges from 0 to 1.
+  $filterDescription: string. Describes and additional details of the filter.
+  $timestamp: POSIXct. Result from Sys.time() call from when the filter was executed.
+```
+
+### Meta-Analysis functions
+
+#### `runMetaAnalysis()`
+Given a `metaObject` with `$originalData` populated this function will run the meta-analysis algorithm. 
+It returns a modified version of the `metaObject` with the meta-analysis results written into `metaObject$metaAnalysis` and the results of the leave-one-out analysis into `metaObject$leaveOneOutAnalysis`.  
+
+**Usage:** 
+```{r, eval=FALSE}
+metaObject <- runMetaAnalysis(metaObject)
+```
+
+**Args:** 
+  : [`metaObject`][]: a `metaObject` which must have the `$originalData`   
+**Generates:** 
+  : Effect size plots   
+**Returns:** 
+  : A modified version of the [`metaObject`][] with both, `$metaAnalysis` and `$leaveOneOutAnalysis`, populated with a [`MetaAnalysisObject`][]  
+
+#### `filterGenes()`
+After the meta-analysis results have been written to the `metaObject`, the results can be examined using different gene filtering criteria. This function will use the given filter parameter to select genes that fulfill the filter conditions. The function returns a modified version of the metaObject with results stored in `metaObject$filterResults`
+
+**Usage:** 
+```{r, eval=FALSE}
+metaObject <- filterGenes(metaObject, filterParameter)
+```
+**Args:** 
+  : [`metaObject`][]: a metaObject, which must have the `$originalData`, `$metaAnalysis` populated
+&nbsp;&nbsp;optional filterParameter: 
+  : `isLeaveOneOut`: Do leave-one-out analysis on discovery datasets (Default: TRUE). Needs at least 2 datasets for discovery.   
+  : `FDRThresh`: FDR cutoff: a gene is selected, if it has a p-value less than or equal to the FDR cutoff (Default: 0.05)    
+  : `effectSizeThresh`: a gene is selected, if the absolute value of its effect size is above this threshold (default: 0)    
+  : `numberStudiesThresh`: number of studies in which a selected gene has to be significantly up/down regulated (Default: 1)    
+  : `heterogeneityPvalThresh`: heterogeneity p-value cutoff (filter is off by default: `heterogeneityPvalThresh = 0`). Genes with significant heterogeneity and, thus a significant (low) heterogeneity p-value, can be filtered out by using e.g.: `heterogeneityPvalThresh = 0.05` (removes all genes with heterogeneity p-value < 0.05)          
+**Returns:** 
+  : [`metaObject`][]: A modified version of the input [`metaObject`][] with an additional [`filterObject`][] stored within `metaObject$filterResults`
+
+### Validation functions
+
+#### `summarizeFilterResults()`
+Given a [`filterObject`][], this function will print a summary style message about genes that passed the filtering step using [`filterGenes()`][] and return a `dataFrame` that contains the `$pooledResults` information for each gene which passed the filter.
+
+**Usage:** 
+```{r, eval=FALSE}
+summarizeFilterResults(metaObject, metaFilterLabel)
+```
+
+**Args:**
+  : [`metaObject`][]: the `metaObject` that contains the `filterObject` of interest
+  : `metaFilterLabel`: the name of a `filterObject` generated with the function [`filterGenes()`][]
+
+**Returns:**
+  : Data frame which contains `$pooledResults` information for each gene which passed the filter   
+
+
+#### `calculateScore()`
+Given a gene set of interest, it is often desirable to summarize the expression of that gene set using a single integrated signature score ([for details see above][Computation of a signature score]). The `calculateScore` method calculates the geometric mean of the expression level of all positive genes, minus the geometric mean of the expression level of all negative genes. The resulting scores are then standardized within the given dataset, such that the output 'Z-score' has mean=0 and std. dev=1. Such a Z-score can then be used for classification, etc. 
+
+**Details:**
+The Z-score is based off of the geometric mean of expression. As such, negative expression values are not allowed. A dataset is thus always scaled by its minimum value + 1, such that the lowest value = 1. Any individual NANs or NAs are also set to 1. If a dataset does not have any information on a given gene, the entire gene is simply left out of the score. When run, the function will print to command line the number of genes used, and the number passed in.
+
+Although mostly used internally, the function has been exported in case users want to compare multiple classes, etc., using the same Z-score as is used for producing two-class comparisons.
+
+**Usage:** 
+```{r, eval=FALSE}
+calculateScore(datasetObject, filterObject)
+```
+**Args:**
+  : [`datasetObject`][]: A Dataset object for which the signature score (Z-score) will be calculated.      
+  : [`filterObject`][]: a MetaFilter object generated with `filterGenes()` containing the signature genes that will be used for Z-score calculation      
+**Returns**
+  : [`datasetObject`][]: A vector of Z-scores, of length `ncols(datasetObject$expr)` (and in the same order). This vector would typically be added as `$score` column in `datasetObject$pheno`. 
+
+
+### Visualization functions
+
+#### `forestPlot()`
+A forest plot can be used to compare the expression values of a gene across different datasets. The size of the blue boxes is proportional to the number of samples in the study and light blue lines indicate the standard error of the effect sizes for each study (95% confidence interval). The summary effect size for all studies is indicated as yellow diamond below and the width of the diamond indicates the summary standard error.
+
+**Usage:** 
+```{r, eval=FALSE}
+forestPlot(metaObject, geneName)
+```
+**Args:** 
+  : [`metaObject`][]: a filtered `metaObject` (i.e. needs to include a `filterObject` generated  with [`filterGenes()`][])    
+  : `geneName`: name of the gene for which the forest plot should be generated   
+**Generates:** 
+  : Forest plot: Plot to compare effect sizes of a gene across datasets
+
+#### `violinPlot()`
+Given a `filterObject` and a `datasetObject` this function will use the selected genes of the `filterObject` to calculate and compare the z-scores of the groups (e.g. cases vs. controls) from the `datasetObject` by generating a violin plot. A violin plot is similar to a box plot, except the width of each violin is proportional to the density of points. `violinPlot()` is commonly used to validate a gene signature in an independent dataset.
+
+**Usage:** 
+```{r, eval=FALSE}
+violinPlot(filterObject, datasetObject, labelColumn)
+```
+**Args:** 
+  : [`filterObject`][]: a MetaFilter object containing the signature genes that will be used for the z-score calculation  
+  : [`datasetObject`][]: a Dataset object for group comparison in a violin plot   
+  : `labelColumn` : the label of the column in `$pheno` that specifies the groups to compare, typically case or control (default: 'label')
+**Generates:** 
+  : Returns a violin plot as ggplot2 plot object
+
+#### `rocPlot()`
+`rocPlot`will plot an ROC curve (and return the AUC) that describes how well a gene signature (as defined in a filterObject) classifies groups in a dataset (in the form of a datasetObject). 
+
+**Details:**
+Evaluates the ability of a given gene set to separate two classes. The gene set is evaluated as a Z-score of the difference in means between the positive genes and the negative genes (see [`calculateScore()`][]). Returns a standard ROC plot, plus AUC with 95% CI (calculated according to [Hanley method](http://www.ncbi.nlm.nih.gov/pubmed/7063747)).  
+**Usage:** 
+```{r, eval=FALSE}
+rocPlot(filterObject, datasetObject, title = "ROC Plot")
+```
+**Args:** 
+  : [`filterObject`][]: a MetaFilter object containing the signature genes that will be used for calculation of the ROC plot.
+  : [`datasetObject`][]: a Dataset object for group comparison in the ROC plot. (At least, must have a `$expr` of probe-level data, `$keys` of probe:gene mappings, and `$class` of two-class labels)
+  : `title` : Title for the ROC plot.
+**Returns:** 
+  : ROC plot as a ggplot2 plot object   
+
+### Search functions
+
+#### `forwardSearch()`
+`forwardSearch` is a method of optimizing a given set of significant genes to maximize discriminatory power, as measured by area under the ROC curve (AUC). The function works by taking a given set of genes (presumably a set that has been filtered for statistical significance), and iteratively adding one gene at a time, until the stopping threshold is reached. At each round, the gene whose addition contributes the greatest increase in weighted AUC is added. Weight AUC is defined as the sum of the AUC of each dataset, times the number of samples in that dataset. The stopping threshold is in units of weighted AUC.
+
+**Usage:** 
+```{r, eval=FALSE}
+forwardSearch(metaObject, geneList, yes.pos = NULL, yes.neg = NULL, forwardThresh = 0)
+```
+**Args:** 
+  : [`metaObject`][]: a Meta object which must be complete (have `$filterResutls` included)   
+  : `geneList`: A list of two vectors of filtered genes; must have positive genes as the first item and negative genes as the second item. Designed to pass in the filtered gene lists from the metaObject.     
+  : `yes.pos`: (Optional) if passed, the forwardSearch will start with the genes in yes.pos and yes.neg (instead of starting from 0 genes).      
+  : `yes.neg`: (Optional) if passed, the forwardSearch will start with the genes in yes.pos and yes.neg (instead of starting from 0 genes).      
+  : `forwardThresh`: Stopping threshold for the backward search. Default=0.     
+**Generates:** 
+  : `Data frame`: containing genes which passed the filtering process   
+  
+**Examples**
+```{r, eval=FALSE}
+#Run a forward search
+forwardRes <- forwardSearch(tinyMetaObject, tinyMetaObject$filterResults[[1]], forwardThresh = 0) 
+```
+
+#### `backwardSearch()`
+`backwardSearch` is a method of optimizing a given set of significant genes to maximize discriminatory power, as measured by area under the ROC curve (AUC). The function works by taking a given set of genes (presumably a set that has been filtered for statistical significance), and iteratively removing one gene at a time, until the stopping threshold is reached. At each round, the gene whose removal contributes the greatest increase in weighted AUC is removed. Weight AUC is defined as the sum of the AUC of each dataset, times the number of samples in that dataset. The stopping threshold is in units of weighted AUC.
+
+**Usage:** 
+```{r, eval=FALSE}
+backwardSearch(metaObject, geneList, backThresh = 0)
+```
+**Args:** 
+  : [`metaObject`][]: The metaObject which must be complete (have `$filterResults` included)   
+  : `geneList`: A list of two vectors of filtered genes; must have positive genes as the first item and negative genes as the second item. Designed to pass in the filtered gene lists from the metaObject.     
+  : `backThresh`: Stopping threshold for the backward search. Default=0.     
+
+**Generates:** 
+  : `Data frame`: containing genes which passed the filtering process   
+  
+**Examples**
+```{r, eval=FALSE}
+#Run a backward search
+backwardRes <- backwardSearch(tinyMetaObject, tinyMetaObject$filterResults[[1]], backThresh = -3) 
+```
+
+### Other functions
+
+#### `checkDataObject()` 
+Given an `object` to check, its `objectType` and the `objectStage`, the function `checkDataObject` looks for errors within Meta, Dataset, MetaAnalyis, or MetaFilter objects. It returns `TRUE` if the object passed error checking, `FALSE` otherwise, and it prints warning messages explaining failed checks.
+
+**Usage:** 
+```{r, eval=FALSE}
+checkDataObject(object, objectType, objectStage)
+```
+**Args:** 
+  : `object`: the object to be checked for validation    
+  : `objectType`: one of "Meta", "Dataset", "MetaAnalysis", "MetaFilter"    
+  : `objectStage`: if a Meta object, one of "Pre-Analysis", "Pre-Filter", or "Post-Filter". Otherwise: "" (empty string)    
+
+**Generates:** 
+  : Prints warning messages explaining the portion of the error checking failed   
+
+**Returns:** 
+  : `TRUE` if passed error checking, `FALSE` otherwise
+
+**Examples**
+```{r, eval=FALSE}
+# check a datasetObject
+checkDataObject(tinyMetaObject$originalData$Whole.Blood.Study.1, "Dataset")
+
+# check a metaObject before running the meta-analysis 
+checkDataObject(tinyMetaObject, "Meta", "Pre-Analysis")
+
+# check a metaObject after running the meta-analysis with runMetaAnalysis()
+checkDataObject(tinyMetaObject, "Meta", "Pre-Filter")
+
+# check a metaObject after filtering the meta-analysis results with filterGenes()
+checkDataObject(tinyMetaObject, "Meta", "Post-Filter")
+
+# check a metaAnalysisObject
+checkDataObject(tinyMetaObject$metaAnalysis, "MetaAnalysis")
+
+# check a filterObject
+checkDataObject(tinyMetaObject$filterResults[[1]], "MetaFilter")
+```
+
+#### `getMostRecentFilter()`
+
+Given a `metaObject` this function will look through `$filterResults` for the most recent filter used and return the filter name.    
+
+**Usage:** 
+```{r, eval=FALSE}
+getMostRecentFilter(metaObject)
+```
+**Args:** 
+  : [`metaObject`][]: A Meta object   
+**Returns:** 
+  : `FilterLabel`: Name of the most recent filter   
+    
+
+#### `calculateROC()`
+Calculates receiver operating characteristic curve data, including AUC (using trapezoidal method). Takes only a vector of labels and a vector of predictions.   
+**Details:**
+The code borrows its core ROC calculations from the ROCR package. AUC is calculated by the trapezoidal method. AUC standard errors are calculated according to Hanley's method [(Hanley et al, 1982)](http://www.ncbi.nlm.nih.gov/pubmed/7063747).
+
+**Usage:** 
+```{r, eval=FALSE}
+calculateROC(labels, predictions, AUConly = F)
+```
+**Args:** 
+  : `labels`: Vector of labels; must have exactly two unique values (ie, cases and controls).  
+  : `predictions`: Vector of predictions (for instance, test scores) to be evaluated for ability to separate the two classes. Must be exactly the same length as labels.    
+  : `AUConly`:  Return all ROC values, or just the AUC.    
+**Returns (if AUConly = F)** 
+  : list of values:     
+  : &nbsp;&nbsp;`roc`: dataframe consisting of two columns, FPR and TPR, meant for plotting     
+  : &nbsp;&nbsp;`auc`: area under the curve    
+  : &nbsp;&nbsp;`auc.CI`: 95% confidence interval for AUC     
+
+
+#### `getSampleLevelGeneData()`
+Given a standard `datasetObject`, and a set of target genes, this function will summarize probe-level data to gene-level data for the target genes. Returns a data frame with only the genes of interest, for each sample in the dataset.
+
+```{r, eval=FALSE}
+getSampleLevelGeneData(datasetObject, geneNames)
+```
+**Args:** 
+  : [`datasetObject`][] : a Dataset object that is used to extract sample level data (At least, must have a `$expr` of probe-level data, and probe:gene mappings in `$keys`).
+  : `geneNames`	: A vector of geneNames
+**Returns** 
+  : a data frame with expression levels of only the genes of interest, for each sample in the dataset.
+  
+  
+  
+## References
+
+* _MetaIntegrator Publication_
+* Sweeney et al., Science Translational Medicine, 2015
+* Khatri P, Roedder S, Kimura N, et al. **A common rejection module (CRM) for acute rejection across multiple organs identifies novel therapeutics for organ transplantation.** [The Journal of Experimental Medicine. 2013;210(11):2205-2221. doi:10.1084/jem.20122709.](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3804941/)
+
+
+## Relevant packages
+
+**Imports:** [rmeta](http://cran.r-project.org/package=rmeta), `r Biocpkg("multtest")`, [ggplot2](http://cran.r-project.org/package=ggplot2), parallel, [bear](http://cran.r-project.org/package=bear)
+
+**Suggests:** `r Biocpkg("BiocStyle")`, [knitr](http://cran.r-project.org/package=knitr), [rmarkdown](http://cran.r-project.org/package=rmarkdown), [RUnit](http://cran.r-project.org/package=RUnit), `r Biocpkg("BiocGenerics")`
+
+
+**Last modified:** `r file.info("MetaIntegrator.Rmd")$mtime`   
+**Last compiled:** `r date()`    
