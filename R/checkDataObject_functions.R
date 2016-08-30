@@ -18,8 +18,48 @@
   nullOK <- .datasetCheckNull(dataset)
   rowColOK <- .datasetCheckRowColNames(dataset)
   typeOK <- .datasetCheckType(dataset)
+  if(!nullOK | !rowColOK | !typeOK) {
+	  return(FALSE)
+  }
+  keysOK <- .datasetCheckKeys(dataset)
+  exprOK <- .datasetCheckExpr(dataset)
   
-  return(nullOK && rowColOK && typeOK)
+  return(keysOK && exprOK)
+}
+
+###############################################################################
+#~ .datasetCheckKeys
+###############################################################################
+#~ .datasetCheckNull warns the user and returns FALSE if all keys are NA
+#~
+#~ Inputs: datasetObject: a dataset object
+#~ Generates: Warning messages if $keys is all NA
+#~ Returns: TRUE if not all NA. FALSE if all NA.
+###############################################################################
+.datasetCheckKeys <- function(datasetObject) {
+  if(sum(!is.na(datasetObject$keys)) == 0) {
+    warning(paste("datasetObject$keys are all NA for ",datasetObject$formattedName,". Check your probe mappings to gene names."))
+    return(FALSE)
+  } 
+  return(TRUE)
+}
+
+###############################################################################
+#~ .datasetCheckExpr
+###############################################################################
+#~ .datasetCheckNull warns the user and returns FALSE if there is an infinite 
+#~ value in expr
+#~
+#~ Inputs: datasetObject: a dataset object
+#~ Generates: Warning messages if infinite value in expr
+#~ Returns: TRUE if no infinite values in expr. FALSE if infinite value in expr.
+###############################################################################
+.datasetCheckExpr <- function(datasetObject) {
+  if(sum(is.infinite(datasetObject$expr)) > 0) {
+    warning(paste("datasetObject$expr contains at least one infinite value in ",datasetObject$formattedName,"."))
+    return(FALSE)
+  } 
+  return(TRUE)
 }
 
 ###############################################################################

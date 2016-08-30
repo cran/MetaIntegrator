@@ -81,6 +81,9 @@ violinPlot <- function(filterObject, datasetObject, labelColumn= "label") {
 
   	factorLevels <- sapply(factorLevels, simpleCap)
   	factorLevels <- sapply(factorLevels, strSplitFun)
+  	
+  	#If capitalization has lead to duplicated factors, remove the duplicates
+  	factorLevels <- factorLevels[!duplicated(factorLevels)]
   }
   
   #Start off with datasetPheno as a character so we can split text

@@ -8,15 +8,15 @@
 
 #Load all the necessary libraries
 #######################################################################################
-#library(RMySQL)
-#library(RSQLite)
-#library(GEOquery)
-#library(GEOmetadb)
-#library(preprocessCore)
-#library(DBI)
+# library(RMySQL)
+# library(RSQLite)
+# library(GEOquery)
+# library(GEOmetadb)
+# library(preprocessCore)
+# library(DBI)
 
 #'GEO download/processing through GEOquery
-#' @import RSQLite GEOquery GEOmetadb preprocessCore
+#' @import RSQLite GEOquery GEOmetadb preprocessCore stringr
 #' @export
 #' @author Francesco Vallania, Andrew Tam
 #'
@@ -27,6 +27,7 @@
 #' 
 #' @return a Pre-Analysis MetaObject containing the datasets loaded in $originalData
 #######################################################################################
+
 getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   
   #Correct gses to upper case
@@ -47,6 +48,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   return(list(originalData = originalData))
 }
 
+globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", "ucsc_refseq_table"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #.GEOqueryCreateGEM
@@ -64,8 +66,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   #run function with tryCatch
   #note-> picking up only one GSE now. Fix this for multiple GPLs
   GEO <- tryCatch(getGEO(id, ...),
-                  error   = function(e) e,
-                  warning = function(w) w);
+                  error   = function(e) e);
   
   if(class(GEO)[[1]]=="GDS") {
     GEO <- list(a=GDS2eSet(GEO))
@@ -245,7 +246,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
       if(length(symbol_pos)==1){
         
         #convert genes into gene names
-        ens_table   <- .ensembl_gene_connector_hs76();
+        ens_table   <- .ensembl_ensgID_table();
         probe2table <- match(GEO_fData[,symbol_pos],ens_table$stable_id);
         
         #store data
@@ -288,7 +289,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
         }
         
         #convert genes into gene names by matching accession numbers
-        ucsc_table  <- .ucsc_genbank_connector_hg19()
+        ucsc_table  <- .ucsc_genbank_table()
         probe2table <- match(gsub("\\..*$","",gb_input_table),ucsc_table$acc)
         
         #store data
@@ -315,7 +316,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
         
         #convert genes into gene names by matching accession numbers
         #bug fix -> removed versioning so that it is now possible to match stuff 
-        ucsc_table  <- .ucsc_refseq_connector_hg19()
+        ucsc_table  <- .ucsc_refseq_table()
         probe2table <- match(gsub("\\..$","",GEO_fData[,symbol_pos]),
                              ucsc_table$name)
         
@@ -377,7 +378,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   keys <- gsub(";| /// ",",",keys)
   
   #remove probes that do not map back to genes
-  genes      <- .ensembl_gene_connector_hs76()
+  genes      <- .ensembl_ensgID_table()
   fake_genes <- which(!(unlist(sapply(keys,function(i)strsplit(i,",")[[1]][1])) 
                         %in% 
                           genes$display_label))
@@ -405,6 +406,46 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
 #GEM GPL annotation functions 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#.ensembl_ensgID_table
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~this function is used to load an ENSGid/HUGOid table [from EnsEMBL v84]
+#######################################################################################
+.ensembl_ensgID_table <- function(){
+  #return table from data
+  return(ens_ensgID_table)
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#.ensembl_entrez_table
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~this function is used to load an Entrez/HUGOid table [from EnsEMBL v84]
+#######################################################################################
+.ensembl_entrez_table <- function(){
+  #return table from data
+  return(ens_entrez_table)
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#.ucsc_genbank_table
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~this function is used to load an GENBANK/HUGOid table [from UCSC]
+#######################################################################################
+.ucsc_genbank_table <- function(){
+  #return table from data
+  return(ucsc_genbank_table)
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#.ucsc_refseq_table
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~this function is used to load an REFSEQ/HUGOid table [from UCSC]
+#######################################################################################
+.ucsc_refseq_table <- function(){
+  #return table from data
+  return(ucsc_refseq_table)
+}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #ensembl_gene_connector
@@ -437,7 +478,6 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   #return table
   return(ens_table);
 }
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #ensembl_entrez_connector
@@ -598,6 +638,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
 #~directly compatible with the rest of the meta-analysis function
 #######################################################################################
 .geoquery_gems_2_singlelist <- function(geo_gem_list, formattedNames){
+	print(summary(geo_gem_list))
   #make a new output list 
   gem_format <- list();
   

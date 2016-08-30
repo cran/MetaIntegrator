@@ -24,7 +24,7 @@ rocPlot <- function(filterObject, datasetObject, title = datasetObject$formatted
     rocObject <- calculateROC(labels=datasetObject$class, predictions=datasetObject$score)
     cat(sprintf("For dataset %s, AUC = %s", datasetObject$formattedName, signif(rocObject$auc, 3)))
     
-    .rocplot.single(rocObject, title=title)    
+    print(.rocplot.single(rocObject, title=title))
 } 
 
 .rocplot.single <- function(rocObject, title = "ROC Plot"){

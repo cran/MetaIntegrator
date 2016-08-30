@@ -1,0 +1,25 @@
+citHeader("To cite MetaIntegrator in publications use:")
+citEntry( entry="Article",
+	author = c(person("Winston A", "Haynes"), 
+	    person("Francesco", "Vallania"), 
+	    person("Charles", "Liu"), 
+	    person("Erika", "Bongen"), 
+	    person("Aurelie", "Tomczak"), 
+	    person("Marta", "Andres-Terre"), 
+	    person("Shane", "Lofgren"), 
+	    person("Andrew", "Tam"), 
+	    person("Cole A.", "Deisseroth"), 
+	    person("Matthew D.", "Li"), 
+	    person("Timothy E.", "Sweeney"), 
+	    person("Purvesh", "Khatri")),
+	title = "Empowering Multi-Cohort Gene Expression Analysis to Increase Reproducibility",
+	year = "2016",
+	URL = "http://biorxiv.org/content/early/2016/08/25/071514",
+	journal = "bioRxiv",
+
+	textVersion= paste("Empowering Multi-Cohort Gene Expression Analysis to Increase Reproducibility. ",
+		"Winston A Haynes, Francesco Vallania, Charles Liu, Erika Bongen, ",
+		"Aurelie Tomczak, Marta Andres-Terre, Shane Lofgren, Andrew Tam, Cole A Deisseroth, ",
+		"Matthew D Li, Timothy E Sweeney, Purvesh Khatri. ",
+		"bioRxiv 071514; doi: http://dx.doi.org/10.1101/071514", sep="")
+)
