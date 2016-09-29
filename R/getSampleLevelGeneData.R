@@ -7,10 +7,12 @@ getSampleLevelGeneData <- function(datasetObject, geneNames){
 	GenesMtx <- .replaceNAs(GenesMtx, 1)
 	return(GenesMtx)
 }
-.extractDataFromGEM <- function(datasetObject, geneNames) {
+.extractDataFromGEM <- function(datasetObject, geneNames, keys.sep=",") {
 # 	genes <- filterObject
 	tempExprs = NULL
-	junk = lapply(as.matrix(geneNames), function(x, keys) which(keys == x), keys=datasetObject$keys)
+	skey = strsplit( datasetObject$keys, split = keys.sep)
+	matchFun <- function(curKey, curGene) { return(curGene %in% curKey) }
+	junk = lapply(as.matrix(geneNames), function(curGene) { rapply(skey, matchFun, curGene=curGene) })
 	for(j in 1:length(junk)) {
 		if(length(junk[[j]]) == 0) {
 			next
@@ -28,6 +30,8 @@ getSampleLevelGeneData <- function(datasetObject, geneNames){
 	
 	return(tempExprs)
 }
+
+
 
 .replaceValues <- function(x, thresholdValue = 0, replaceValue = 1) {
 	for(i in 1:dim(x)[2]) {

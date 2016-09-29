@@ -601,9 +601,9 @@ getSampleLevelGeneData(datasetObject, geneNames)
 
 ## Relevant packages
 
-**Imports:** [rmeta](http://cran.r-project.org/package=rmeta), `r Biocpkg("multtest")`, [ggplot2](http://cran.r-project.org/package=ggplot2), parallel, [bear](http://cran.r-project.org/package=bear)
+**Imports:** [rmeta](https://CRAN.R-project.org/package=rmeta), `r Biocpkg("multtest")`, [ggplot2](https://CRAN.R-project.org/package=ggplot2), parallel, [bear](https://CRAN.R-project.org/package=bear)
 
-**Suggests:** `r Biocpkg("BiocStyle")`, [knitr](http://cran.r-project.org/package=knitr), [rmarkdown](http://cran.r-project.org/package=rmarkdown), [RUnit](http://cran.r-project.org/package=RUnit), `r Biocpkg("BiocGenerics")`
+**Suggests:** `r Biocpkg("BiocStyle")`, [knitr](https://CRAN.R-project.org/package=knitr), [rmarkdown](https://CRAN.R-project.org/package=rmarkdown), [RUnit](https://CRAN.R-project.org/package=RUnit), `r Biocpkg("BiocGenerics")`
 
 
 **Last modified:** `r file.info("MetaIntegrator.Rmd")$mtime`   

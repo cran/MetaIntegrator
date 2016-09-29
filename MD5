@@ -1,4 +1,4 @@
-6334e8f27086bd8a1973d3305002ea2e *DESCRIPTION
+9609b6a538e18f7398b410eb83d3a7a8 *DESCRIPTION
 9f7660c100736707c9fca240cfeb0f1a *NAMESPACE
 1e2a2bda873dc676b03fb2e10cad9832 *NEWS
 2de772ef071a3fd084caeefa7188feb8 *R/ROC_and_search_functions.R
@@ -9,7 +9,7 @@ b2ac6c3b0e3544c01e0b4ee7a4c9321f *R/filterGenes.R
 87f69b6c04b6e5564b2cc7902b403484 *R/forestPlot.R
 e4b1211a069f1c20427d6b2b949f3a00 *R/getGEOData.R
 e871b28098cb9c749ff8f11a491ca487 *R/getMostRecentFilter.R
-f40ae5eea34423407194f98f39c01b47 *R/getSampleLevelGeneData.R
+179821041c40ab7eba7de06175457ade *R/getSampleLevelGeneData.R
 8817f522d3c503410061e040abfd2821 *R/heatmapPlot.R
 30b1588403cb8a3acea67a16db3e2137 *R/metaAnalysis.R
 ed72cf9eedd0e8e726c2bdbb29f14cb6 *R/metaAnalysisFoundation.R
@@ -28,8 +28,8 @@ e0bd73f5122841bba7826058eeed5df3 *data/ucsc_genbank_table.rda
 04da981f84e9418391516a5033984a49 *data/ucsc_refseq_table.rda
 c7e567513e792eadce90a63eafc31b6e *inst/CITATION
 3b6b5cf48fc0749e68e3e55724fd0104 *inst/doc/MetaIntegrator.R
-84f9769dad70c90ab8bee9059abf0da4 *inst/doc/MetaIntegrator.Rmd
-e70ccc3d3c12381d2855a60a9ece8868 *inst/doc/MetaIntegrator.html
+79e82179056f2b82cb50f4c0326b64ff *inst/doc/MetaIntegrator.Rmd
+4f4fbab13136101d19b4eeff991a4364 *inst/doc/MetaIntegrator.html
 d477fdc4788d6eaef03dfe63afdef607 *inst/unitTests/goldStandardOutput/forestPlots.pdf
 2e98673ac41ac90fb9addaa2b07aa4a7 *inst/unitTests/goldStandardOutput/rocPlots.pdf
 120623a7cf1ba32e8d2af80b150cdff4 *inst/unitTests/goldStandardOutput/violinPlots.pdf
@@ -70,7 +70,7 @@ aab57155ccc65980220eebfefc7f6bf2 *man/ucsc_genbank_table.Rd
 4e14827dd467fda6260de052eafa59bf *man/ucsc_refseq_table.Rd
 9674c35c8505ab2eb1997b896629b4df *man/violinPlot.Rd
 c2588c853c4dde37c8da752b99b2978b *tests/runTests.R
-84f9769dad70c90ab8bee9059abf0da4 *vignettes/MetaIntegrator.Rmd
+79e82179056f2b82cb50f4c0326b64ff *vignettes/MetaIntegrator.Rmd
 38d20b68612fd74bbf0a131feb37017f *vignettes/images/Eq1.png
 b1808b8d583f0a6cefb3a91587df92cb *vignettes/images/Eq2.png
 3031a44e2cd711a0a417e7bc76cc579d *vignettes/images/Eq3.png
