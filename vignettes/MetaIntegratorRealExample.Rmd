@@ -1,0 +1,174 @@
+---
+title: "MetaIntegrator Real Example on GEO Data"
+author: "Winston Haynes"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MetaIntegrator Real Example on GEO Data}
+  %\VignetteEngine{knitr::rmarkdown_notangle}
+  %\VignetteKeyword{bioinformatics}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r import package, message=FALSE, echo=FALSE, warning=FALSE}
+library(MetaIntegrator) 
+# set eval to TRUE if R code should be executed
+eval=FALSE
+```
+
+# 1. Get Public Gene Expression Data
+## Download Data
+For this example, we will work through a small gene expression meta-analysis of systemic lupus erythematosus (SLE). We have identified public datasets that we will download from GEO for this analysis.
+```{r downloadData, eval=eval, echo=TRUE, warning=FALSE, message=FALSE}
+#Download the data from GEO, this can take a little while
+sleData <- getGEOData(c("GSE11909","GSE50635", "GSE39088"))
+```
+
+
+## Label samples
+All samples need to be assigned labels in the $class vector, 1 for 'disease' or 0 for 'control'. 
+```{r labelData, eval=eval, warning=FALSE, message=FALSE}
+sleData$originalData$GSE50635 <- classFunction(sleData$originalData$GSE50635, column = "subject type:ch1", 
+                                              diseaseTerms = c("Subject RBP +", "Subject RBP -"))
+
+sleData$originalData$GSE11909_GPL96 <- classFunction(sleData$originalData$GSE11909_GPL96, column = "Illness:ch1", 
+                                              diseaseTerms = c("SLE"))
+
+sleData$originalData$GSE39088 <- classFunction(sleData$originalData$GSE39088, column= "disease state:ch1", 
+                                               diseaseTerms=c("SLE"))
+
+#Remove the GPL97 platform that was downloaded
+sleData$originalData$GSE11909_GPL97 <- NULL
+```
+
+# 2. Run Meta-Analysis
+```{r metaAnalysis, eval=eval, echo=TRUE}
+sleMetaAnalysis <- runMetaAnalysis(sleData, runLeaveOneOutAnalysis = F, maxCores = 1)
+```
+
+
+# 3. Identify Gene Signature
+## Filter Genes
+Set up criteria to filter genes for whether or not they will be included in the disease signature. 
+```{r filterGenes, eval=eval}
+sleMetaAnalysis <- filterGenes(sleMetaAnalysis, isLeaveOneOut = F, effectSizeThresh = 1, FDRThresh = 0.05)
+```
+
+## Calculate Meta Score
+Once you have identified a gene signature, you can calculate a score for each sample based on the geometric mean of the up-regulated genes minus the geometric mean of the down-regulated genes. This score will be elevated in SLE patients compared to healthy controls.  
+```{r calculateScore, eval=eval}
+sleScores <- calculateScore(filterObject = sleMetaAnalysis$filterResults[[1]], datasetObject = sleMetaAnalysis$originalData[[1]])
+```
+This score can now be used to examine the results. Most functions call this score in the background.
+
+# 4. Examine Results
+
+## Visualize gene effect sizes
+We can visualize the effect sizes for all genes in the signature.
+```{r heatmapPlot, eval=eval, fig.height=5, fig.width=5}
+heatmapPlot(metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+## MetaScore Classification Performance
+Receiver operating characteristic (ROC) curves and precision-recall (PRC) curves can be used to demonstrate the classification performance of the MetaScore.  
+
+### Single ROC Curve
+
+```{r singleROC, eval=eval, fig.height=7, fig.width=7}
+rocPlot(datasetObject = sleMetaAnalysis$originalData$GSE5063, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+### Multiple ROC Curves
+Draw multiple ROC curves.
+```{r multipleROC, eval=eval, fig.height=7, fig.width=7}
+multipleROCPlot(metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+Draw multiple ROC curves with a summary ROC curve that represents an overall ROC estimate. 
+```{r summaryROC, eval=eval, fig.height=7, fig.width=7, warning=FALSE, message=FALSE}
+summaryROCPlot(metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]], bootstrapReps = 100)
+```
+
+Draw multiple ROC curves with a pooled ROC curve that represents a moving average ROC.
+```{r pooledROC, eval=eval, fig.height=7, fig.width=7, warning=FALSE, message=FALSE}
+pooledROCPlot(metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+### Single PRC Plot
+Draw a single PRC plot.
+```{r singlePRC, eval=eval, fig.height=7, fig.width=7}
+prcPlot(datasetObject = sleMetaAnalysis$originalData$GSE5063, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+### Multiple PRC Curves
+Draw multiple PRC curves.
+```{r multiplePRC, eval=eval, fig.height=7, fig.width=7}
+multiplePRCPlot(metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+## Understand Sample Phenotypes
+### Violin plot
+With a violin plot, you can drill into subgroups within datasets to observe differences between populations, with the individual samples called out. 
+```{r violinPlot, eval=eval, fig.height=5, fig.width=5}
+violinPlot(filterObject = sleMetaAnalysis$filterResults[[1]], datasetObject = sleMetaAnalysis$originalData$GSE50635, labelColumn = "subject type:ch1")
+```
+
+### Regression plot
+For continuous variables, generate regression plot to analyze relationships. 
+
+```{r regressionPlot, eval=eval, fig.height=5, fig.width=5}
+sleMetaAnalysis$originalData$GSE50635$pheno$`age:ch1` <- as.numeric(sleMetaAnalysis$originalData$GSE50635$pheno$`age:ch1`) 
+
+regressionPlot(filterObject = sleMetaAnalysis$filterResults[[1]], datasetObject = sleMetaAnalysis$originalData$GSE50635, continuousVariableColumn = "age:ch1", formattedVariableName = "Age")
+```
+
+## Forest plot
+Forest plots allow us to examine individual genes across studies.
+```{r forestPlot, eval=eval, fig.height=5, fig.width=5}
+forestPlot(geneName="IFI44L", metaObject = sleMetaAnalysis)
+```
+
+## Advanced Analyses
+
+### Forward/backward search
+Use forward and backward search to reduce the number of genes in the signature and improve classification performance.
+```{r forwardBackward, eval=FALSE}
+forwardRes <- forwardSearch( metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]])
+```
+
+### immunoStates Deconvolution
+immunoStates is a tool for estimating immune cell proportions based on gene expression profiles. immunoStateMeta() in MetaIntegrator allow you to estimate cell proportions, then use these cell proportions as input for a downstream meta-analysis (in place of genes).
+```{r immunoStates, eval=FALSE}
+immunoMeta <- immunoStatesMeta( metaObject = sleMetaAnalysis)
+```
+
+immunoStates can also correct the underlying gene expression data for differences in cell proportions
+```{r immunoStatesCorrect, eval=FALSE}
+sleMetaImmuneCorrected <- immunoStatesDecov( metaObject = sleMetaAnalysis)
+```
+
+### LINCS tools
+LINCS tools allows users to compare disease gene expression signatures to perturbation expression signatures identified by the LINCS consortium. lincsTools() will generate a broadly useful report of many different classes of molecules. The call to lincsCorrelate(), below, is one particular example of looking for a drug with a gene expression profile that reverses the SLE profile. Note that this requires downloading a significant amount of data, so the first execution will be slow. 
+```{r lincs, eval=eval, fig.height=5, fig.width=5}
+lincsHits <- lincsCorrelate( metaObject = sleMetaAnalysis, filterObject = sleMetaAnalysis$filterResults[[1]], dataset = "CP", direction = "reverse")
+```
+
+### Impute sex
+Based on known marker genes, impute sex of samples. This can be useful for identifying sample labeling errors.
+```{r imputeSex, eval=eval}
+imputedSex <- imputeSex( myDataset = sleMetaAnalysis$originalData$GSE11909_GPL96)
+head(imputedSex)
+```
+
+### COCONUT
+COCONUT is a separate R package for correcting batch effects to merge multiple datasets into a single dataset. This is a wrapper function to call COCONUT on a MetaIntegrator object. 
+```{r coconut, eval=FALSE}
+coconutRes <- coconutMetaIntegrator( metaObject = sleMetaAnalysis)
+```
+
+### Pathway Analysis
+Pathway analysis is commonly performed to provide biological interpretation for experiments. This is a wrapper function for deapathways, one R package for performing pathway analysis.  
+**NOTE: This functionality will be added in future updates to MetaIntegrator**
+```{r pathway, eval=FALSE}
+#pathwayRes <- pathwayAnalysis( metaObject = sleMetaAnalysis)
+```

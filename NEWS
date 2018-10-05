@@ -1,3 +1,14 @@
+CHANGES IN VERSION 2.0.0
+-------------------------
+
+NEW FEATURES
+	o Added functions related to immunoStates
+	o Added a variety of new plotting functions for better data visualization
+	o Added functions for power calculations, imputing sex, COCONUT conormalization, and updating gene symbols
+	o Added LINCS integration
+
+
+
 CHANGES IN VERSION 0.99.0
 -------------------------
 

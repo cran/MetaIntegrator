@@ -17,7 +17,7 @@ For detailed documentation of functions and use cases read: \code{vignette(MetaI
 }
 
 \details{
-The advent of the gene expression microarray has allowed for a rapid increase in gene expression studies. There is now a wealth of publically available gene expression data available for re-analysis. An obvious next step to increase statistical power in detecting changes in gene expression associated with some condition is to aggregate data from multiple studies. 
+The advent of the gene expression microarray has allowed for a rapid increase in gene expression studies. There is now a wealth of publicly available gene expression data available for re-analysis. An obvious next step to increase statistical power in detecting changes in gene expression associated with some condition is to aggregate data from multiple studies. 
 
 The MetaIntegrator package will perform a DerSimonian & Laird random-effects meta-analysis for each gene (not probeset) between all target studies between cases and controls; it also performs a Fischer's sum-of-logs method on the same data, and requires that a gene is significant by both methods. The resulting p-values are False discovery rate (FDR) corrected to q-values, and will evaluate the hypothesis of whether each gene is differentially expressed between cases and controls across all studies included in the analysis.
 
@@ -48,7 +48,7 @@ Khatri P et al. J Exp. Med. 2013
 vignette(MetaIntegrator)
 }
 \examples{
-
+\dontrun{
 #Run a meta analysis. 
 #   maxCores is set to 1 for package guideline compliance. 
 #		For personal purposes, leave parameter un-set.
@@ -80,5 +80,5 @@ rocPlot(metaObject$filterResults$FDR0.05_es0_nStudies1_looaTRUE_hetero0, dataset
 
 # generate a forest plot for a gene of interest with forestPlot(metaObject, geneName)
 forestPlot(metaObject, "Gene27")
-
+}
 }

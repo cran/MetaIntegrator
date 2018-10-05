@@ -1,0 +1,117 @@
+---
+title: "LINCS Report"
+output: html_document
+params:
+  rdataFilePath: temp
+  cutoff: NA
+  pert.ordered: F
+  gene.ordered: F
+  transpose: F
+  scale: F
+  resize: F
+---
+
+##  Drugs
+
+```{r, echo=FALSE}
+load(params$rdataFilePath)
+library(pheatmap)
+library(knitr)
+###################################################
+###Function 3, lincsHeatmap
+###################################################
+lincsHeatmap = function(hit.expression, cutoff = as.numeric(params$cutoff), 
+												pert.ordered = as.logical(params$pert.ordered),
+												gene.ordered = as.logical(params$gene.ordered), 
+												transpose = as.logical(params$transpose),
+												scale = as.logical(params$scale), 
+												resize = as.logical(params$resize), hm.title = NULL, out.file = NULL
+												,cluster_rows = F,cluster_cols= T){
+	
+	hit.expression = hit.expression[order(hit.expression$sig),]
+	
+	###Apply cutoff... useful for getting the data to be 0 centered
+	if(!is.null(cutoff)){
+		hit.expression[hit.expression > cutoff] = cutoff
+		hit.expression[hit.expression < -cutoff] = -cutoff
+	}
+	
+	
+	###Scale if desired
+	if(scale) hit.expression = scale(hit.expression)
+	
+	##Order from most to least correlated to the signature
+	if(pert.ordered){
+		cor.order = t(cor(hit.expression[,"sig"],hit.expression))
+		cor.order = cor.order[order(-cor.order[,1]),,drop=F]
+		hit.expression = hit.expression[,rownames(cor.order)]
+	}
+	
+	###Transpose if desired
+	if(transpose) hit.expression = as.data.frame(t(hit.expression))
+	
+	hm.command = "heatmap = pheatmap(hit.expression
+	,clustering_method = 'ward.D2',clustering_distance_cols = 'manhattan'
+	,clustering_distance_rows = 'manhattan'
+	,color =colorRampPalette(c('navy', 'white', 'firebrick3'))(50)"
+	if(resize)hm.command = paste(hm.command,"
+															 ,cellwidth = 10, cellheight = 10",sep="")
+	if(!is.null(hm.title))hm.command = paste(hm.command,"
+																					 ,main = hm.title",sep="")
+	if(!is.null(out.file)) hm.command = paste(hm.command,"
+																						,filename = '",out.file,"'",sep="")
+	
+	hm.command = paste(hm.command,"
+										 ,cluster_rows =cluster_rows, cluster_cols =cluster_cols)",sep="")
+	
+	eval(parse(text = hm.command))
+	
+}
+```
+
+```{r, echo=FALSE, warning=FALSE}
+lincsHeatmap(cp.conn.rev$hit.expression, hm.title = "Top Reversing Drugs")
+DT::datatable(cp.conn.rev.hits)
+
+lincsHeatmap(cp.conn.agg$hit.expression, hm.title = "Top Aggravating Drugs")
+DT::datatable(cp.conn.agg.hits)
+```
+
+## shRNAs
+
+
+```{r, echo=FALSE, warning=FALSE}
+lincsHeatmap(sh.conn.rev$hit.expression, hm.title = "Top Reversing shRNAs (Possible Targets for Reversing the Signature)")
+DT::datatable(sh.conn.rev.hits)
+
+lincsHeatmap(sh.conn.agg$hit.expression,hm.title = "Top Aggravating shRNAs (Possible Targets for Aggravating the Signature")
+DT::datatable(sh.conn.agg.hits)
+```
+
+## Over Expressions
+```{r, echo=FALSE, warning=FALSE}
+lincsHeatmap(oe.conn.rev$hit.expression, hm.title = "Top Reversing OverExpressions")
+DT::datatable(oe.conn.rev.hits)
+
+lincsHeatmap(oe.conn.agg$hit.expression, hm.title = "Top Aggravating OverExpressions")
+DT::datatable(oe.conn.agg.hits)
+```
+
+## Ligands
+```{r, echo=FALSE, warning=FALSE}
+lincsHeatmap(lig.conn.rev$hit.expression, hm.title = "Top Reversing Ligands (Possible mAB Targets for Aggravating the Signature)")
+DT::datatable(lig.conn.rev.hits)
+
+lincsHeatmap(lig.conn.agg$hit.expression, hm.title = "Top Aggravating Ligands (Possible mAB Targets for Reversing the Signature")
+DT::datatable(lig.conn.agg.hits)
+```
+
+## Mutations
+```{r, echo=FALSE, warning=FALSE}
+lincsHeatmap(mut.conn.rev$hit.expression, hm.title = "Top Reversing Mutations (Possible Reversal Pathways)")
+DT::datatable(mut.conn.rev.hits)
+
+lincsHeatmap(mut.conn.agg$hit.expression, hm.title = "Top Aggravating Mutations (Possible Drivers or Driver Pathways)")
+DT::datatable(mut.conn.agg.hits)
+```
+

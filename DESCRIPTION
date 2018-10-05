@@ -1,27 +1,30 @@
 Package: MetaIntegrator
 Type: Package
 Title: Meta-Analysis of Gene Expression Data
-Version: 1.0.3
-Date: 2016-09-27
+Version: 2.0.0
+Date: 2018-09-05
 Author: Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy Sweeney,
-    Erika Bongen, Purvesh Khatri
-Maintainer: Winston A. Haynes <hayneswa@stanford.edu>
+    Erika Bongen, Aditya M. Rao, Purvesh Khatri
+Maintainer: Aditya M. Rao <adityamr@stanford.edu>
 Description: A pipeline for the meta-analysis  of gene expression data. We have
 	assembled several analysis and plot functions to
     perform integrated multi-cohort analysis of gene expression data (meta-
     analysis). Methodology described in:
 	<http://biorxiv.org/content/early/2016/08/25/071514>.
 License: LGPL
-Imports: rmeta, multtest, ggplot2, parallel, Rmisc, reshape, gplots,
-        Biobase, RMySQL, DBI, stringr, preprocessCore, GEOquery,
-        GEOmetadb, RSQLite
-Suggests: BiocStyle, knitr, rmarkdown, RUnit, BiocGenerics
+biocViews:
+Imports: rmeta, multtest, ggplot2, parallel, Rmisc, gplots, Biobase,
+        RMySQL, DBI, stringr, preprocessCore, GEOquery, GEOmetadb,
+        RSQLite, data.table, ggpubr, ROCR, zoo, pracma, COCONUT,
+        Metrics, manhattanly, snplist, DT, pheatmap, plyr, boot, dplyr,
+        reshape2, rmarkdown, AnnotationDbi, HGNChelper, magrittr, readr
+Suggests: BiocStyle, knitr, RUnit, BiocGenerics
 VignetteBuilder: knitr
 LazyData: true
-RoxygenNote: 5.0.1
-Depends: R (>= 2.10)
+RoxygenNote: 6.0.1
+Depends: R (>= 3.3)
 URL: http://biorxiv.org/content/early/2016/08/25/071514
 NeedsCompilation: no
-Packaged: 2016-09-28 22:19:22 UTC; hayneswa
+Packaged: 2018-10-05 09:21:50 UTC; adityamr
 Repository: CRAN
-Date/Publication: 2016-09-29 08:02:32
+Date/Publication: 2018-10-05 15:32:30 UTC

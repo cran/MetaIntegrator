@@ -1,16 +1,26 @@
-#######################################################################################
-#metaIntegrator Functions: runMetaAnalysis
-#2015/03/02 3:48pm @ Stanford
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#the purpose of this code is to contain the runMetaAnalysis function
-#######################################################################################
-
-#######################################################################################
-#runMetaAnalysis
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#this function runs the metanalysis pipeline from metaObject and returns a new
-#metaObject that contains results from metaAnalysis and leaveOneOutAnalysis
-#######################################################################################
+#' Run the meta-analysis algorithm 
+#' @description
+#' Given a \code{metaObject} with \code{$originalData} populated this function will run the meta-analysis algorithm.      
+#' It returns a modified version of the \code{metaObject} with the meta-analysis results written into \code{metaObject$metaAnalysis} and the results of the leave-one-out analysis into \code{metaObject$leaveOneOutAnalysis}
+#' @usage
+#' 	runMetaAnalysis(metaObject, runLeaveOneOutAnalysis= TRUE, maxCores=Inf)
+#' @param metaObject a metaObject which must have \code{metaObject$originalData} populated with a list of \code{datasetObjects} that will be used for discovery
+#' @param runLeaveOneOutAnalysis TRUE to run leave one out analysis, FALSE otherwise (default: TRUE)
+#' @param maxCores maximum number of cores to use during analysis (default: Inf)
+#' @return modified version of the \code{metaObject} with \code{$metaAnalysis} and \code{$leaveOneOutAnalysis} populated
+#' @author Francesco Vallania
+#' @details
+#' To make sure the input is correctly formatted, the input \code{metaObject} should be checked with \code{checkDataObject(metaObject, "Meta", "Pre-Analysis")} before starting the meta-analysis.
+#' @seealso	\code{\link{checkDataObject}}
+#' @examples
+#'	#Run a meta analysis. 
+#'	#		maxCores is set to 1 for package guideline compliance. 
+#'	#		For personal purposes, leave parameter un-set.
+#'	runMetaAnalysis(tinyMetaObject, maxCores=1)
+#'@keywords 
+#' methods 
+#' @export
+#' @import ggplot2 parallel data.table
 runMetaAnalysis <- function(metaObject,
                             runLeaveOneOutAnalysis = TRUE,
                             maxCores=Inf){
@@ -44,7 +54,7 @@ runMetaAnalysis <- function(metaObject,
   metaObject$leaveOneOutAnalysis <- NULL
   
   #plot the ES histograms here
-  es_plot <- ggplot(melt(metaObject$metaAnalysis$datasetEffectSizes, varnames=c("Gene", "Study")),
+  es_plot <- ggplot(reshape2::melt(metaObject$metaAnalysis$datasetEffectSizes, varnames=c("Gene", "Study")),
                     aes_string(x      = "value",
                         colour = "Study")) + 
     geom_density(size = 1.1)            + 

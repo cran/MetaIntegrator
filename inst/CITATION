@@ -14,12 +14,12 @@ citEntry( entry="Article",
 	    person("Purvesh", "Khatri")),
 	title = "Empowering Multi-Cohort Gene Expression Analysis to Increase Reproducibility",
 	year = "2016",
-	URL = "http://biorxiv.org/content/early/2016/08/25/071514",
-	journal = "bioRxiv",
+	URL = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5167529/",
+	journal = "Pacific Symposium on Biocomputing",
 
 	textVersion= paste("Empowering Multi-Cohort Gene Expression Analysis to Increase Reproducibility. ",
 		"Winston A Haynes, Francesco Vallania, Charles Liu, Erika Bongen, ",
 		"Aurelie Tomczak, Marta Andres-Terre, Shane Lofgren, Andrew Tam, Cole A Deisseroth, ",
 		"Matthew D Li, Timothy E Sweeney, Purvesh Khatri. ",
-		"bioRxiv 071514; doi: http://dx.doi.org/10.1101/071514", sep="")
+		"Pac Symp Biocomp.", sep="")
 )

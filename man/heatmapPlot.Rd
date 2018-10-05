@@ -4,7 +4,9 @@
 \alias{heatmapPlot}
 \title{Generates a heatmap with effect sizes for all genes which pass a filter in all measured diseases}
 \usage{
-heatmapPlot(metaObject, filterObject, colorRange = c(-1, 1))
+heatmapPlot(metaObject, filterObject, colorRange = c(-1, 1),
+  geneOrder = FALSE, datasetOrder = FALSE, displayPooled = TRUE,
+  useFormattedNames = TRUE)
 }
 \arguments{
 \item{metaObject}{a Meta object which must have the $originalData, $metaAnalysis populated}
@@ -12,6 +14,14 @@ heatmapPlot(metaObject, filterObject, colorRange = c(-1, 1))
 \item{filterObject}{a MetaFilter object containing the signature genes that will be used for the heatmap}
 
 \item{colorRange}{a vector of length two with the minimum and maximum values for the heatmap colors. (default: c(-1,1))}
+
+\item{geneOrder}{FALSE if the genes should be ordered by pooled effect size in this datasets. Otherwise, the ordered names of the genes. (default: FALSE)}
+
+\item{datasetOrder}{FALSE if the datasets should be ordered alphabetically. Otherwise, the ordered names of the datasets (default: FALSE)}
+
+\item{displayPooled}{TRUE if the pooled effect sizes should be displayed. (default: TRUE)}
+
+\item{useFormattedNames}{TRUE if the formatted datasetNames should be displayed. (default: TRUE)}
 }
 \value{
 Generates a heatmap with effect sizes for all genes which pass a filter
@@ -25,4 +35,3 @@ heatmapPlot(tinyMetaObject, tinyMetaObject$filterResults[[1]])
 \author{
 Winston A. Haynes
 }
-

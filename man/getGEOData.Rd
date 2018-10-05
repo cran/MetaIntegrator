@@ -4,12 +4,14 @@
 \alias{getGEOData}
 \title{GEO download/processing through GEOquery}
 \usage{
-getGEOData(gseVector, formattedNames = gseVector, ...)
+getGEOData(gseVector, formattedNames = gseVector, qNorm = FALSE, ...)
 }
 \arguments{
 \item{gseVector}{a vector of GSE ids (each a string)}
 
 \item{formattedNames}{a vector of formatted names corresponding to the GSE ids. Default: gseVector}
+
+\item{qNorm}{perform quantile normalization of expression data within a dataset or not. Default: FALSE}
 
 \item{...}{will pass additional parameters to getGEO, including \code{destdir}, which specifies download location}
 }
@@ -22,4 +24,3 @@ Creates MetaIntegrator formatted objects by downloading and formatting data from
 \author{
 Francesco Vallania, Andrew Tam
 }
-

@@ -1,21 +1,30 @@
-#This file was written by Winn Haynes
-#Last updated: May 12, 2015
+# This file was written by Winn Haynes
+# Last updated: January 17, 2017
 
-#'Generate a plot which draws a regrssion line between the Meta Score and a continuous variable phenotype.
+#'Generate a plot which draws a regression line between the Meta Score and a continuous variable phenotype.
 #'
 #'@param filterObject a MetaFilter object containing the signature genes that will be used for the z-score calculation
 #'@param datasetObject a Dataset object (typically independent validation dataset) for comparison in a regression plot
-#'@param continuousVariableColumn the label of the column in $pheno that sepecifies the continuous variable to compare (default: 'continuousVariableColumn')
+#'@param continuousVariableColumn the label of the column in $pheno that specifies the continuous variable to compare (default: 'continuousVariableColumn')
 #'@param formattedVariableName label which will be used on the x-axis on the plot
+#'@param corMethod method which will be passed to cor.test
+#'@param correlationCorner one of topLeft, topRight, bottomLeft, bottomRight (default: bottomRight)
 #'
 #'@return Returns a regression plot as ggplot2 plot object
 #'
 #'@author Winston A. Haynes
 #'
 #'@keywords graph
-#'
+#'@examples
+#' regressionPlot(tinyMetaObject$filterResults[[1]], 
+#'                tinyMetaObject$originalData$Whole.Blood.Study.1,
+#'                continuousVariableColumn="age",
+#'                formattedVariableName="Age")
 #'@import ggplot2
-regressionPlot <- function(filterObject, datasetObject, continuousVariableColumn= "continuous", formattedVariableName="Continuous Variable") {
+#'@export
+regressionPlot <- function(filterObject, datasetObject, continuousVariableColumn= "continuous", 
+                           formattedVariableName="Continuous Variable", corMethod="pearson", 
+                           correlationCorner="bottomRight") {
 	#Load relevant libraries
 	
 	#Check that our objects are the right type
@@ -40,11 +49,14 @@ regressionPlot <- function(filterObject, datasetObject, continuousVariableColumn
 	#Populate the continuous column
 	datasetPheno$continuous <- datasetPheno[,continuousVariableColumn]
 	
-	return(.createRegressionPlot(datasetPheno, formattedName=datasetObject$formattedName, formattedVariableName=formattedVariableName))
+	return(.createRegressionPlot(datasetPheno, formattedName=datasetObject$formattedName, 
+	                             formattedVariableName=formattedVariableName, corMethod=corMethod, 
+	                             correlationCorner=correlationCorner))
 }
 
 .createRegressionPlot <- function(datasetPheno, comparisonColumn="continuous", scoreColumn="score", formattedName="",
-																	formattedVariableName="Continuous Variable") {
+																	formattedVariableName="Continuous Variable", corMethod="pearson", 
+																	correlationCorner="bottomRight") {
 	
 	#Set visualization parameters
 	segmentWidth <- 0.05
@@ -53,6 +65,14 @@ regressionPlot <- function(filterObject, datasetObject, continuousVariableColumn
 	#Swap our column names to "x" and "y", so that we can work with them in the ggplot drawing
 	datasetPheno$y <- datasetPheno[,scoreColumn]
 	datasetPheno$x <- datasetPheno[,comparisonColumn]
+
+	corRes <- stats::cor.test(datasetPheno$x,datasetPheno$y, use="complete.obs", method=corMethod)
+	
+	coordVal <- c(Inf, -Inf, 1, -0.1)
+	if(correlationCorner == "bottomLeft") { coordVal <- c(-Inf, -Inf, 0, -0.1) }
+	if(correlationCorner == "topLeft") { coordVal <- c(-Inf, Inf, 0, 1) }
+	if(correlationCorner == "topRight") { coordVal <- c(Inf, Inf, 1, 1) }
+	
 	
 	plotObject <- ggplot(datasetPheno, aes_string(x="x",y="y")) + 
 		geom_point() +
@@ -60,8 +80,8 @@ regressionPlot <- function(filterObject, datasetObject, continuousVariableColumn
 		ylab("Meta Score")+
 		ggtitle(formattedName) +
 	  theme(text = element_text(size=24)) +
-		annotate("text",x=0.9*max(datasetPheno$x, na.rm=TRUE), y=1, size=6,
-             label=paste("R=",signif(cor(datasetPheno$x,datasetPheno$y, use="complete.obs"),3))) + 
+		annotate("text",x=coordVal[1], y=coordVal[2], hjust=coordVal[3], vjust=coordVal[4], size=6,
+             label=paste("R=",signif(corRes$estimate,3), "\np=", signif(corRes$p.value,3))) + 
 		geom_smooth(method="lm") +
 		xlab(formattedVariableName)
 

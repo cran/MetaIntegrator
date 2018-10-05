@@ -1,15 +1,18 @@
-#######################################################################################
-#metaIntegrator Functions: getMostRecentFilter
-#2015/03/02 3:48pm @ Stanford
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#the purpose of this code is to contain the filterGenes function
-#######################################################################################
+#' Get name of most recent filter 
+#' @description Given a \code{metaObject} this function will look through \code{$filterResults} 
+#' for the most recent filter used and return the filter name.
+#' @usage
+#' 	getMostRecentFilter(metaObject)
+#' @param metaObject A meta object
+#' @return Name of the most recent filter
+#' @author Francesco Vallania
+#' @examples 
+#' 	getMostRecentFilter(tinyMetaObject)
+#' @keywords 
+#' attribute
+#' utilities
+#' @export
 
-#######################################################################################
-#getMostRecentFilter
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#this function returns a list of filtered genes tables 
-#######################################################################################
 getMostRecentFilter <- function(metaObject){
   
   #check metaObject here at this step

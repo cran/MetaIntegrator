@@ -1,39 +1,22 @@
-#######################################################################################
-#Meta-Analysis GEO Datasets Preprocessing Code
-#by Francesco Vallania, March 28th 2014 @ 14:53
-#@ Stanford
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#the purpose of this code is to preprocess input GEO datasets for metaintegrator
-#######################################################################################
-
-#Load all the necessary libraries
-#######################################################################################
-# library(RMySQL)
-# library(RSQLite)
-# library(GEOquery)
-# library(GEOmetadb)
-# library(preprocessCore)
-# library(DBI)
-
 #'GEO download/processing through GEOquery
-#' @import RSQLite GEOquery GEOmetadb preprocessCore stringr
 #' @export
 #' @author Francesco Vallania, Andrew Tam
 #'
 #' @description Creates MetaIntegrator formatted objects by downloading and formatting data from GEO.
 #' @param gseVector a vector of GSE ids (each a string) 
 #' @param formattedNames a vector of formatted names corresponding to the GSE ids. Default: gseVector
+#' @param qNorm perform quantile normalization of expression data within a dataset or not. Default: FALSE
 #' @param ... will pass additional parameters to getGEO, including \code{destdir}, which specifies download location
 #' 
 #' @return a Pre-Analysis MetaObject containing the datasets loaded in $originalData
-#######################################################################################
+#' @export
 
-getGEOData <- function(gseVector, formattedNames=gseVector, ...){
+getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   
   #Correct gses to upper case
   gseVector <- toupper(gseVector)
   
-  originalData        <- lapply(gseVector,.GEOqueryCreateGEM, ...)
+  originalData        <- lapply(gseVector,.GEOqueryCreateGEM, qNorm, ...)
   names(originalData) <- gseVector
   originalData        <- .geoquery_gems_2_singlelist(originalData, formattedNames)
   
@@ -48,15 +31,13 @@ getGEOData <- function(gseVector, formattedNames=gseVector, ...){
   return(list(originalData = originalData))
 }
 
-globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", "ucsc_refseq_table"))
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #.GEOqueryCreateGEM
 #~by Andrew Tam + Francesco Vallania [July 2014]
 #~this will fetch and annotate a GEM object(s) directly from GEO using the GSE ID!!! 
 #~[requires GEOquery package]
 #######################################################################################
-.GEOqueryCreateGEM <- function(id, ...){
+.GEOqueryCreateGEM <- function(id, qNorm, ...){
   #make sure id starts with GSE or GDS
   if(length(grep("^GSE",id,invert=T))==0 & length(grep("^GDS",id,invert=T))==0){
     id <- paste("GSE",id,sep="");
@@ -65,11 +46,11 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   #fetch GEO object from GSEID
   #run function with tryCatch
   #note-> picking up only one GSE now. Fix this for multiple GPLs
-  GEO <- tryCatch(getGEO(id, ...),
+  GEO <- tryCatch(GEOquery::getGEO(id, ...),
                   error   = function(e) e);
   
   if(class(GEO)[[1]]=="GDS") {
-    GEO <- list(a=GDS2eSet(GEO))
+    GEO <- list(a=GEOquery::GDS2eSet(GEO))
     names(GEO)[[1]] <- id
   }
   
@@ -81,7 +62,7 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
     #lapply function to GEM object
     gem <- lapply(GEO,
                   function(i){
-                    .GEOqueryGEO2GEM(i,id);
+                    .GEOqueryGEO2GEM(i,id, qNorm);
                   });
   }
   
@@ -91,17 +72,17 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #GEOqueryGEO2GEM
-#~by Andrew Tam + Francesco Vallania [July 2014]
+#~by Andrew Tam + Francesco Vallania [July 2014] + Ravi Shankar [August 2018]
 #~this will convert the GEO object to GEM for our convenience!
 #~[requires GEOquery package]
 #######################################################################################
-.GEOqueryGEO2GEM <- function(GEO,id){
+.GEOqueryGEO2GEM <- function(GEO,id,qNorm){
   
   #generate pheno matrix
-  pheno = pData(GEO);
+  pheno = Biobase::pData(GEO);
   
   #generate expression matrix
-  expr  = exprs(GEO);
+  expr  = Biobase::exprs(GEO);
   
   #create gem object
   gem = list(name         = id, 
@@ -110,7 +91,7 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   #there is a expression matrix
   if(dim(expr)[1]>0){
     #parse out fData
-    fData_out <- .GEO_fData_key_parser(fData(GEO))
+    fData_out <- .GEO_fData_key_parser(Biobase::fData(GEO))
     
     #get platform information
     platform_info <- NA
@@ -132,11 +113,28 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
     gem$platform    = platform_info
     
     #check for log scale
-    if(.GEM_log_check_v1(gem)==FALSE){
+    if(.GEM_log_check(gem)==FALSE){
+      min_value <- min(gem$expr, na.rm = T);
+      
+      # There is possibility of negative values in processed non-normalized 
+      # data from the background subtraction algorithm. For e.g., GSE103842 (Illumina data)
+      # if minimum value is negative, add small offset to all values to make them all positive
+      if (min_value < 0) {
+        gem$expr <- gem$expr - min_value + 1;
+      }
+      
       gem$expr <- log2(gem$expr);
       gem$exp_comment = "Data was not in log scale originally";
     }
     
+    # perform quantile normalization
+    if (qNorm == TRUE) {
+      col_names <- colnames(gem$expr)
+      row_names <- rownames(gem$expr)
+      gem$expr <- preprocessCore::normalize.quantiles(gem$expr)
+      colnames(gem$expr) <- col_names
+      rownames(gem$expr) <- row_names
+    }
   }
   else{
     #create gem object
@@ -259,14 +257,48 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   }
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
-  #Case4-> genes are encoded in GenBank format [use Human for this]
+  #Case4-> genes are encoded in REFSEQ format [use Human for this]
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+  if(is.null(keys) && check_len==1){
+    if(length(symbol_pos)<1){
+      #identify whether it is stored as REFSEQ
+      symbol_pos <- which(sapply(1:ncol(GEO_fData),
+                                 function(i)#bug fix-> create pattern match for correctly mapping REFSEQ
+                                   length(grep("^NM_002046.*$",GEO_fData[,i]))>0))
+      
+      if(length(symbol_pos)> 1){symbol_pos <- symbol_pos[1]}
+      if(length(symbol_pos)==1){
+        
+        #convert genes into gene names by matching accession numbers
+        #bug fix -> removed versioning so that it is now possible to match stuff 
+        ucsc_table  <- .ucsc_refseq_table()
+        
+        #if REFSEQ IDs have _at at the end add it to the table
+        if(length(grep("_at",GEO_fData[1,symbol_pos]))>0){
+          ucsc_table$name <- gsub("$","_at",ucsc_table$name)
+        }
+        
+        probe2table <- match(gsub("\\..$","",GEO_fData[,symbol_pos]),
+                             ucsc_table$name)
+        
+        #store data
+        keys        <- ucsc_table$name2[probe2table]
+        names(keys) <- as.character(GEO_fData[[1]])
+        
+        comment     <- "Human REFSEQ format"
+      }
+    }
+  }  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+  #Case5-> genes are encoded in GenBank format [use Human for this]
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
   if(is.null(keys) && check_len==1){
     if(length(symbol_pos)<1){
       #identify whether it is stored as ENSG
       symbol_pos <- which(sapply(1:ncol(GEO_fData),
                                  function(i)
-                                   length(grep("^(M61854|NM_003374|M29696)$",GEO_fData[,i]))>0));
+                                   length(grep("^(M61854|M29696)$",GEO_fData[,i]))>0));
       
       if(length(symbol_pos)> 1){
         symbol_pos <- symbol_pos[1]
@@ -301,52 +333,18 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
     }
   } 
   
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
-  #Case5-> genes are encoded in REFSEQ format [use Human for this]
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
-  if(is.null(keys) && check_len==1){
-    if(length(symbol_pos)<1){
-      #identify whether it is stored as REFSEQ
-      symbol_pos <- which(sapply(1:ncol(GEO_fData),
-                                 function(i)#bug fix-> create pattern match for correctly mapping REFSEQ
-                                   length(grep("^NM_002046.*$",GEO_fData[,i]))>0))
-      
-      if(length(symbol_pos)> 1){symbol_pos <- symbol_pos[1]}
-      if(length(symbol_pos)==1){
-        
-        #convert genes into gene names by matching accession numbers
-        #bug fix -> removed versioning so that it is now possible to match stuff 
-        ucsc_table  <- .ucsc_refseq_table()
-        probe2table <- match(gsub("\\..$","",GEO_fData[,symbol_pos]),
-                             ucsc_table$name)
-        
-        #store data
-        keys        <- ucsc_table$name2[probe2table]
-        names(keys) <- as.character(GEO_fData[[1]])
-        
-        comment     <- "Human REFSEQ format"
-      }
-    }
-  }  
+  
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
   #Case6-> genes are encoded in EntrezID format [use Human for this]
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
   if(is.null(keys) && check_len==1){
     if(length(symbol_pos)<1){
-      #identify whether it is stored as REFSEQ
-      symbol_pos <- which(sapply(1:ncol(GEO_fData),
-                                 function(i)
-                                   length(grep("CD44",GEO_fData[,i]))>0))
       
-      symbol_row <- which(sapply(1:nrow(GEO_fData),
-                                 function(i)
-                                   length(grep("CD44",GEO_fData[i,symbol_pos]))>0))
-      
-      #entrezid is 960
+      #intentify the presense of EntrezID entries
       entrez_pos <- which(sapply(1:ncol(GEO_fData),
                                  function(i)
-                                   length(grep("^960$",GEO_fData[symbol_row,i]))>0))
+                                   length(grep("^960$",GEO_fData[,i]))>0))
       if(length(entrez_pos)==1){
         #get table
         entrezid_table <- .ensembl_entrez_connector()
@@ -455,12 +453,12 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 .ensembl_gene_connector_hs76 <- function(){
   
   #Establish connection to EnsEMBL
-  con <- dbConnect(dbDriver("MySQL"),
-                   username= 'anonymous',
-                   host    = 'ensembldb.ensembl.org',
-                   dbname  = 'homo_sapiens_core_76_38',
-                   password= '',
-                   port    = 3306);
+  con <- DBI::dbConnect(DBI::dbDriver("MySQL"),
+                        username= 'anonymous',
+                        host    = 'ensembldb.ensembl.org',
+                        dbname  = 'homo_sapiens_core_76_38',
+                        password= '',
+                        port    = 3306);
   
   #build the parts for the query string
   query  <- "select gene.stable_id,
@@ -470,10 +468,10 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   where xref.xref_id = gene.display_xref_id";
   
   #run query and get table
-  ens_table <- dbGetQuery(con,query);
+  ens_table <- DBI::dbGetQuery(con,query);
   
   #Close connection
-  dbDisconnect(con);
+  DBI::dbDisconnect(con);
   
   #return table
   return(ens_table);
@@ -487,12 +485,12 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 .ensembl_entrez_connector <- function(){
   
   #Establish connection to EnsEMBL
-  con <- dbConnect(dbDriver("MySQL"),
-                   username= 'anonymous',
-                   host    = 'ensembldb.ensembl.org',
-                   dbname  = 'homo_sapiens_core_76_38',
-                   password= '',
-                   port    = 3306)
+  con <- DBI::dbConnect(DBI::dbDriver("MySQL"),
+                        username= 'anonymous',
+                        host    = 'ensembldb.ensembl.org',
+                        dbname  = 'homo_sapiens_core_76_38',
+                        password= '',
+                        port    = 3306)
   
   #build the parts for the query string
   query  <- "select xref.dbprimary_acc,
@@ -503,16 +501,15 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   xref.external_db_id = external_db.external_db_id"
   
   #run query and get table
-  ens_table           <- dbGetQuery(con,query)
+  ens_table           <- DBI::dbGetQuery(con,query)
   colnames(ens_table) <- c("EntrezID","GeneName")
   
   #Close connection
-  dbDisconnect(con)
+  DBI::dbDisconnect(con)
   
   #return table
   return(ens_table)
 }
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #ucsc_genbank_connector_hg19
@@ -522,12 +519,12 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 .ucsc_genbank_connector_hg19 <- function(){
   
   #Establish connection to UCSC
-  con <- dbConnect(dbDriver("MySQL"),
-                   username= 'genome',
-                   host    = 'genome-mysql.cse.ucsc.edu',
-                   dbname  = 'hgFixed',
-                   password= '',
-                   port    = 3306);
+  con <- DBI::dbConnect(DBI::dbDriver("MySQL"),
+                        username= 'genome',
+                        host    = 'genome-mysql.cse.ucsc.edu',
+                        dbname  = 'hgFixed',
+                        password= '',
+                        port    = 3306);
   
   #build the parts for the query string
   query  <- "select geneName.name,
@@ -540,10 +537,10 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
   geneName.name      != 'unknown'";
   
   #run query and get table
-  ucsc_tab <- dbGetQuery(con,query);
+  ucsc_tab <- DBI::dbGetQuery(con,query);
   
   #Close connection
-  dbDisconnect(con);
+  DBI::dbDisconnect(con);
   
   #return table
   return(ucsc_tab);
@@ -557,21 +554,21 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 .ucsc_refseq_connector_hg19 <- function(){
   
   #Establish connection to UCSC
-  con <- dbConnect(dbDriver("MySQL"),
-                   username= 'genome',
-                   host    = 'genome-mysql.cse.ucsc.edu',
-                   dbname  = 'hg19',
-                   password= '',
-                   port    = 3306);
+  con <- DBI::dbConnect(DBI::dbDriver("MySQL"),
+                        username= 'genome',
+                        host    = 'genome-mysql.cse.ucsc.edu',
+                        dbname  = 'hg19',
+                        password= '',
+                        port    = 3306);
   
   #build the parts for the query string
   query  <- "select name,name2 from refGene";
   
   #run query and get table
-  ucsc_tab <- dbGetQuery(con,query);
+  ucsc_tab <- DBI::dbGetQuery(con,query);
   
   #Close connection
-  dbDisconnect(con);
+  DBI::dbDisconnect(con);
   
   #return table
   return(ucsc_tab);
@@ -585,50 +582,79 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #GEM_log_check_v1
-#~[by Francesco 2014/03/31]
+#~[by Francesco 2014/03/31 + Ravi Shankar August 2018]
 #~this function checks if GEM is in log scale and returns TRUE/FALSE 
 #######################################################################################
-.GEM_log_check_v1 <- function(GEM){
+.GEM_log_check <- function(GEM){
+  
+  #remove columns that have just the same value [sd of 0] [see in GSE21126]
+  goodCols <- which(sapply(1:ncol(GEM$expr),
+                           function(i)
+                             !stats::sd(GEM$expr[,i],na.rm=T)==0))
   
   #pick the first column that is not all NAs
-  ref_p <- which(sapply(1:ncol(GEM$expr),
-                        function(i)
-                          !all(is.na(GEM$expr[,i]))))[1]
+  ref_p <- goodCols[which(sapply(goodCols,
+                                 function(i)
+                                   !all(is.na(GEM$expr[,i]))))[1]]
   
-  #this range is obserbed only in log-normal case [in this part context]
-  if(range(GEM$expr[,ref_p],na.rm=T)[1]<0){
-    return(TRUE)
+  #define input vector
+  inputC <- GEM$expr[,ref_p]
+  
+  # Note we cannot assume that if there are negative expression values, the data is log2 normalized
+  # For e.g., in the case of Illumina data, there is possibility of negative values in processed non-normalized 
+  # data from the background subtraction algorithm. (GSE103842)
+  # Therefore, make all values positive and apply qq_norm to check if data is log2 normalized
+  min_value <- min(inputC, na.rm = T);
+  
+  # if minimum value is negative, add small offset to all values to make them all positive
+  if (min_value < 0) {
+    inputC <- inputC - min_value + 1;
   }
-  #if it's all positives all the bets are off
-  else{
-    #The data should be normally distributed
-    #once in log scale
-    #Get qq-norm objects
-    obj_real <- qqnorm(GEM$expr[,ref_p],plot.it=FALSE);
-    obj_exp  <- qqnorm(exp(GEM$expr[,ref_p]),plot.it=FALSE);
-    obj_log  <- qqnorm(log(abs(GEM$expr[,ref_p])+0.00001),plot.it=FALSE);
-    
-    #remove infinite
-    obj_exp$x[which(is.infinite(obj_exp$x))] <- NA;
-    obj_exp$y[which(is.infinite(obj_exp$y))] <- NA;  
-    
-    #look at correlations
-    cor_real <- cor(obj_real$x,obj_real$y,use='pairwise.complete');
-    cor_exp  <- cor(obj_exp$x, obj_exp$y, use='pairwise.complete');
-    cor_log  <- cor(obj_log$x ,obj_log$y ,use='pairwise.complete');
-    
-    #compute R^2 difference and take ratio
+  
+  #The data should be normally distributed
+  #once in log scale
+  #Get qq-norm objects
+  obj_real <- stats::qqnorm(GEM$expr[,ref_p],plot.it=FALSE);
+  obj_exp  <- stats::qqnorm(exp(GEM$expr[,ref_p]),plot.it=FALSE);
+  obj_log  <- stats::qqnorm(log(abs(GEM$expr[,ref_p])+0.00001),plot.it=FALSE);
+  
+  #remove infinite
+  obj_exp$x[which(is.infinite(obj_exp$x))] <- NA;
+  obj_exp$y[which(is.infinite(obj_exp$y))] <- NA;  
+  
+  #look at correlations
+  cor_real <- stats::cor(obj_real$x,obj_real$y,use='pairwise.complete');
+  cor_exp  <- stats::cor(obj_exp$x, obj_exp$y, use='pairwise.complete');
+  cor_log  <- stats::cor(obj_log$x ,obj_log$y ,use='pairwise.complete');
+  
+  #compute R^2 difference and take ratio
+  log_check_score <- 0
+  
+  if(!all(is.na(cor_exp))){
     log_check_score <- log2(abs(cor_real**2 - cor_log**2)/abs(cor_real**2 - cor_exp**2))
     
     #dataset is in log scale
     if(log_check_score<=0){
-      return(TRUE);
+      return(TRUE)
     }
     #dataset is not in log scale
     else{
-      return(FALSE);
+      return(FALSE)
     }
+  }else{
+    
+    if(cor_real > cor_log){
+      #dataset is in log scale
+      return(TRUE)
+    }else{
+      #dataset is not in log scale
+      return(FALSE)
+    }
+    
+    
   }
+  
+  
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -638,29 +664,33 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 #~directly compatible with the rest of the meta-analysis function
 #######################################################################################
 .geoquery_gems_2_singlelist <- function(geo_gem_list, formattedNames){
-	print(summary(geo_gem_list))
+  print(summary(geo_gem_list))
   #make a new output list 
   gem_format <- list();
   
   #get only the gems of interest
   for(i in 1:length(names(geo_gem_list))){
-    #get inside the object
-    for(j in 1:length(geo_gem_list[[i]])){
-      print(names(geo_gem_list[[i]]))
-      
-      #extract name
-      set_name <- gsub("_series_matrix.txt.gz",
-                       "",
-                       names(geo_gem_list[[i]])[j]);
-      #replace dashes with underscores
-      set_name <- gsub("-","_",set_name);
-      #save gem object in list
-      gem_format[[set_name]] <- .GEM_inf_gene_remover(geo_gem_list[[i]][[j]]);
-      
-      gem_format[[set_name]]$formattedName <- formattedNames[[i]]
-      if(length(geo_gem_list[[i]])>1) {
-        gem_format[[set_name]]$formattedName <- paste(gem_format[[set_name]]$formattedName, str_match_all(set_name,"(GPL[0-9]+)")[[1]][1,2][[1]])
+    if(length(geo_gem_list[[i]])>0) {
+      #get inside the object
+      for(j in 1:length(geo_gem_list[[i]])){
+        print(names(geo_gem_list[[i]]))
+        
+        #extract name
+        set_name <- gsub("_series_matrix.txt.gz",
+                         "",
+                         names(geo_gem_list[[i]])[j]);
+        #replace dashes with underscores
+        set_name <- gsub("-","_",set_name);
+        #save gem object in list
+        gem_format[[set_name]] <- .GEM_inf_gene_remover(geo_gem_list[[i]][[j]]);
+        
+        gem_format[[set_name]]$formattedName <- formattedNames[[i]]
+        if(length(geo_gem_list[[i]])>1) {
+          gem_format[[set_name]]$formattedName <- paste(gem_format[[set_name]]$formattedName, stringr::str_match_all(set_name,"(GPL[0-9]+)")[[1]][1,2][[1]])
+        }
       }
+    } else {
+      warning(paste("Unable to correctly download",formattedNames[[i]],". Dataset will be excluded from this object."))
     }
   }
   
@@ -675,10 +705,27 @@ globalVariables(c("ens_ensgID_table", "ens_entrez_table", "ucsc_genbank_table", 
 #######################################################################################
 .GEM_inf_gene_remover  <- function(GEM){ 
   #remove completely samples with -Inf, Inf, or they have some buffer overflow/underflow issues
-  bad_samples           <- c(which(GEM$expr==Inf),which(GEM$expr==-Inf),which(GEM$expr >= 1.741796*10**308));
-  GEM$expr[bad_samples] <- NA;
+  
+  # Note: Due to a deficiency in the which() function, the commented out code fails on very large datasets
+  # bad_samples           <- c(which(GEM$expr==Inf),which(GEM$expr==-Inf),which(GEM$expr >= 1.741796*10**308));
+  # GEM$expr[bad_samples] <- NA;
+  
+  if (is.null(GEM$expr))
+    return(GEM)
+  
+  if (ncol(GEM$expr) > 0) {
+    for (i in 1:ncol(GEM$expr)) {
+      GEM$expr[GEM$expr[,i]==Inf] <- NA;
+      GEM$expr[GEM$expr[,i]==-Inf] <- NA;
+      GEM$expr[GEM$expr[,i]>=1.741796*10**308] <- NA;
+    }
+  }
   
   #return GEM
   return(GEM);
 }
+
+
+#declare global variables for variables in data.table/with notation to avoid R CMD CHECK notes
+utils::globalVariables(c("ens_ensgID_table","ens_entrez_table","ucsc_genbank_table","ucsc_refseq_table"))
 

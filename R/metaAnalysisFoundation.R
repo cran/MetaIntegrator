@@ -92,8 +92,8 @@
   diff <- m1 - m2
   
   #compute pooled standard deviation
-  sd1  <- sd(x)
-  sd2  <- sd(y)
+  sd1  <- stats::sd(x)
+  sd2  <- stats::sd(y)
   sp   <- sqrt( ( (n1-1)*sd1^2 + (n2-1)*sd2^2 )/( n1 + n2 - 2 ) )
   
   #correct for small sample size [from Cohen's D to Hedge's G]
@@ -187,7 +187,7 @@
     
     if (option == "fixed.iv") {
       out2 <- sapply(tmp, function(m) {
-        unlist(meta.summaries(m$g, m$se.g, method = "fixed")[c("summary", "se.summary")])
+        unlist(rmeta::meta.summaries(m$g, m$se.g, method = "fixed")[c("summary", "se.summary")])
       })
       out2 <- t(out2)
       colnames(out2) <- c("g", "se.g")
@@ -206,7 +206,6 @@
 }
 
 .pool.inverseVar <- function( g, se.g, method ){
-  
   ## Modified to include various measures of heterogeneity in effect sizes
   ## 1. Q.het - Cochrane's Q
   ## 2. df.het - degrees of freedom (number of studies a gene is measured in)
@@ -219,30 +218,38 @@
   
   for(j in 1:nrow(g)){
     
-    e  <- .cleanNA(    g[j, ] )
-    se <- .cleanNA( se.g[j, ] )
+    whichAreNA <- which(!is.na(g[j,]) & is.finite(g[j,]))
+    e  <- g[j, whichAreNA]
+    se <- se.g[j, whichAreNA]
     n  <- length(e)
-    
-    if(n==1){
-      summ <- e
-      se.summ <- se   
+    if(n==0){
+      summ <- NA
+      se.summ <- NA
       tau2 <- NA
       Q.het = NA
       df.het = NA
       pval.het = NA
-    } else {
-      fit      <- meta.summaries(e, se, method = method)
-      summ     <- fit$summary
-      se.summ  <- fit$se.summary
-      tau2     <- ifelse( method=="fixed", NA, fit$tau2 )
-      Q.het    <- fit$het[1]
-      df.het   <- fit$het[2]
-      pval.het <- fit$het[3]
-      rm(fit)
+    } else { 
+      if(n==1){
+        summ <- e
+        se.summ <- se   
+        tau2 <- NA
+        Q.het = NA
+        df.het = NA
+        pval.het = NA
+      } else {
+        fit      <- rmeta::meta.summaries(e, se, method = method)
+        summ     <- fit$summary
+        se.summ  <- fit$se.summary
+        tau2     <- ifelse( method=="fixed", NA, fit$tau2 )
+        Q.het    <- fit$het[1]
+        df.het   <- fit$het[2]
+        pval.het <- fit$het[3]
+        rm(fit)
+      }
     }
     
-    pval     <- 2*pnorm( abs(summ/se.summ), lower.tail=FALSE )
-    
+    pval     <- 2*stats::pnorm( abs(summ/se.summ), lower.tail=FALSE )
     out[j, ] <- c(n, summ, se.summ, tau2, pval, Q.het, df.het, pval.het)
     rm(e, se, n, summ, se.summ, tau2, pval, Q.het, df.het, pval.het)
   }
@@ -259,8 +266,8 @@
 .ttest.Qvalues <- function(study){
   
   out        <- .ttest.Pvalues(study)
-  out$Q.up   <- p.adjust( out$P.up, method="fdr" )
-  out$Q.down <- p.adjust( out$P.down, method="fdr" )
+  out$Q.up   <- stats::p.adjust( out$P.up, method="fdr" )
+  out$Q.down <- stats::p.adjust( out$P.down, method="fdr" )
   
   out <- out[ , c("Q.up", "Q.down", "keys")]
   return(out)
@@ -277,12 +284,12 @@
 
 .get.ttest.P <- function(mat, g){
   ## test statistic and DF calculated using equal variance assumption
-  tstat <- mt.teststat( mat, g, test="t.equalvar" )
+  tstat <- multtest::mt.teststat( mat, g, test="t.equalvar" )
   df <- length(g) - 2
   
-  P.both <- 2*pt( abs(tstat), df=df, lower.tail=FALSE )
-  P.down <- pt( tstat, df=df, lower.tail=TRUE )
-  P.up   <- pt( tstat, df=df, lower.tail=FALSE )
+  P.both <- 2*stats::pt( abs(tstat), df=df, lower.tail=FALSE )
+  P.down <- stats::pt( tstat, df=df, lower.tail=TRUE )
+  P.up   <- stats::pt( tstat, df=df, lower.tail=FALSE )
   
   out <- cbind(P.both, P.down, P.up)
   rownames(out) <- rownames(mat)
@@ -296,12 +303,12 @@
   sigs.up   <- combsigs$sigs.up
   valid.up  <- rowSums( !is.na(sigs.up) )
   F.stat.up <- -2*rowSums( log(sigs.up), na.rm=TRUE )
-  F.pval.up <- pchisq( F.stat.up, 2*valid.up, lower.tail=FALSE )
+  F.pval.up <- stats::pchisq( F.stat.up, 2*valid.up, lower.tail=FALSE )
   
   sigs.down   <- combsigs$sigs.down
   valid.down  <- rowSums( !is.na(sigs.down) )
   F.stat.down <- -2*rowSums( log(sigs.down), na.rm=TRUE )
-  F.pval.down <- pchisq( F.stat.down, 2*valid.down, lower.tail=FALSE )
+  F.pval.down <- stats::pchisq( F.stat.down, 2*valid.down, lower.tail=FALSE )
   
   out <- cbind(F.stat.up, F.pval.up, F.stat.down, F.pval.down)
   return(out)

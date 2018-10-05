@@ -134,11 +134,15 @@
 #~ .checkClass
 ###############################################################################
 #~ .checkClass checks to make sure that $class is either: 1) a numeric
-#~ vector of 1's and 0's OR 2) NULL. 
+#~ vector of 1's, 0's, -1's OR 2) NULL. 
+#~
+#~  1 --> Case
+#~  0 --> Control
+#~ -1 --> Subject to be removed from analysis (in MANATEE)
 #~
 #~ Inputs: dataset, a dataset object
 #~
-#~ Outputs: TRUE if $class is a numeric vector of 1's and 0's or if 
+#~ Outputs: TRUE if $class is a numeric vector of 1's, 0's, -1's OR if 
 #~          $class is NULL. FALSE if $class is something else. 
 #~          Also gives warnings explaining how $class is the wrong type.
 ###############################################################################
@@ -151,8 +155,8 @@
   } else if (is.vector(dataset$class) && is.numeric(dataset$class) ) {
     for (i in dataset$class) {
       
-      if (i != 0 && i != 1) {
-        warning("Values not equal to 1 or 0 are present in the class vector.")
+      if (i != 0 && abs(i) != 1) {
+        warning("Values not equal to 1, 0, or -1 are present in the class vector.")
         return(FALSE)
       }
     }
@@ -642,11 +646,11 @@
   
   
   if (range != "" && is.numeric(object)) {
-    if (range == "non-negative" && any(na.omit(object) < 0)) {
+    if (range == "non-negative" && any(stats::na.omit(object) < 0)) {
       typeOK <- FALSE
       warning(deparse(substitute(object)), " contains negative values.")
       
-    } else if (range == "range[0,1]" && (any(na.omit(object) > 1) || any(na.omit(object) < 0))) {
+    } else if (range == "range[0,1]" && (any(stats::na.omit(object) > 1) || any(stats::na.omit(object) < 0))) {
       typeOK <- FALSE
       warning(deparse(substitute(object)), " is not between 0 and 1.")
     } else if (!any(range == validRanges)) {
