@@ -1,6 +1,6 @@
-526134c90d13ba3fc4194c3cf5ab141d *DESCRIPTION
+0e063237913ab68f6f0c8938b37aa80a *DESCRIPTION
 d1ab356ee2aeab74547e3b9d7053ca6f *NAMESPACE
-4ed4e923367249c66d51c008eb66b231 *NEWS
+ed8e8543445dcc2de1cdcb10c915abfa *NEWS
 c3727f8acb487f259ece24db8e0aaf6d *R/ROC_and_search_functions.R
 498aa08218abd1c8db607fa61a27c156 *R/calculatePower.R
 80b40e482032d13ac6731a1664441a4d *R/calculateScore.R
@@ -12,7 +12,7 @@ d653d871d4dff10b0c03e6c6e2317b09 *R/coconutMetaIntegrator.R
 78b132e1a4e9fada054493b4e9220e0d *R/filterGenes.R
 8b0d5fb0bc589c6a3be7d012cb686e8b *R/forestPlot.R
 0f6c5b875b24ea736f058327d540c4d6 *R/geneSymbolCorrection.R
-6f0944d6e03916fe8946da9616fc8610 *R/getGEOData.R
+581285e4ba609c8ac645717fb83676d5 *R/getGEOData.R
 86819c7f9b4f9bc8a9bf26dddacec30a *R/getMostRecentFilter.R
 67a995c103fb01927339c074b070bbeb *R/getSampleLevelGeneData.R
 9578f507cf6a6fe00dd5315303923adb *R/ggForestPlot.R
@@ -21,14 +21,14 @@ d653d871d4dff10b0c03e6c6e2317b09 *R/coconutMetaIntegrator.R
 bcba5046d53012ba1cf4d2498902de3e *R/immunoStatesMeta.R
 551da672db11c31ca7a050f24b05ad97 *R/imputeSex.R
 c8df46489926c4b8f72a28a195d09c15 *R/lincsTools.R
-34d01cf7d7726e117621512bbfb51a4a *R/manhattanPlot.R
+7d57809037c39bdcf6c04b5845fa2be7 *R/manhattanPlot.R
 530568820008fb6a87dc0d86b2bb0112 *R/metaAnalysis.R
 e9487899a92bbb8a70ea635b4c51d2f6 *R/metaAnalysisFoundation.R
 243ef9eba11a89e85344ebadfcd03270 *R/multiplePRCPlot.R
 e1697284850050ab1e54add774d5bd19 *R/multipleROCPlot.R
 0e7fc41928a016264bf00bf02094b815 *R/pooledROCplot.R
 e639f633cdb61d341c19e5346734d002 *R/prcPlot.R
-6175e80c872802c14d58324f420b4d33 *R/predvalPlot.R
+131c58e04d15d647cb17210b59749255 *R/predvalPlot.R
 187a9f67b8ca53113b8fec4e144a1317 *R/regressionPlot.R
 d69bf5f18bf91267f5c81283db0645ee *R/runMetaAnalysis.R
 c3023deb96182774389e39690c082487 *R/subsetOriginalData.R
@@ -47,9 +47,9 @@ e0bd73f5122841bba7826058eeed5df3 *data/ucsc_genbank_table.rda
 33938c4976a50cfbbc4ac35c7550db36 *inst/CITATION
 c4079f3681e0cbb38788d4b923e2e07f *inst/doc/MetaIntegrator.R
 e8886b9710247fed1e1a314c781e3cb8 *inst/doc/MetaIntegrator.Rmd
-29e5e734888f60e9ff9638c91403a14d *inst/doc/MetaIntegrator.html
+fc3359738a80788753723610366cc1be *inst/doc/MetaIntegrator.html
 514292bc9b1176a1a610ca7efa9612ec *inst/doc/MetaIntegratorRealExample.Rmd
-e879aafcd3c0bb6b0d2b9c3e4f945b73 *inst/doc/MetaIntegratorRealExample.html
+3d2bcda1e452ac4aff0b772a8dce45af *inst/doc/MetaIntegratorRealExample.html
 6eff2b65c9e07107a461bdd086363da0 *inst/lincsReport.Rmd
 d477fdc4788d6eaef03dfe63afdef607 *inst/unitTests/goldStandardOutput/forestPlots.pdf
 2e98673ac41ac90fb9addaa2b07aa4a7 *inst/unitTests/goldStandardOutput/rocPlots.pdf

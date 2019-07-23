@@ -3,7 +3,9 @@ CHANGES IN VERSION 2.1.0
 NEW FEATURES
 	o New plotting function for looking at predictive values across different prevalences
 	o Improved the success rate of getGEOData
-
+PATCHES
+  2.1.1 - bugfix for snplist package, which has recently stopped working on MacOS
+  
 
 CHANGES IN VERSION 2.0.0
 -------------------------

@@ -6,6 +6,9 @@
 #' @export
 
 manhattanPlot <- function(metaObject) {
+  if(!requireNamespace("snplist", quietly = TRUE)){
+    stop("Package \"snplist\" is needed for this function to work. Please install it.", call. = FALSE)
+  }
   if(!checkDataObject(metaObject, objectType="Meta", objectStage = "Pre-Filter")) {
     stop("Need properly formatted Meta object")
   }

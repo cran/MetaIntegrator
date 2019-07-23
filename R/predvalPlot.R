@@ -57,3 +57,5 @@ predvalPlot <- function(sens, spec, nsteps=1000, title=NULL, rounding=2) {
                    xaxis = list(title = "Prevalence (%)"),
                    yaxis = list(title = "Predictive Value (%)"))
 }
+
+#Note: I think this is the only function that depends on httpuv

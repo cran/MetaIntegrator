@@ -15,7 +15,7 @@
 getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   
   #bugfix - sometimes there's a MySQL error if this isn't run
-  requireNamespace(package = "RMySQL")
+  requireNamespace(package = "RMySQL", quietly=TRUE)
   
   #Correct gses to upper case
   gseVector <- toupper(gseVector)
