@@ -1,6 +1,6 @@
 #'GEO download/processing through GEOquery
 #' @export
-#' @author Francesco Vallania, Andrew Tam
+#' @author Francesco Vallania, Andrew Tam, Ravi Shankar, Aditya M. Rao
 #'
 #' @description Creates MetaIntegrator formatted objects by downloading and formatting data from GEO.
 #' @param gseVector a vector of GSE ids (each a string) 
@@ -8,10 +8,14 @@
 #' @param qNorm perform quantile normalization of expression data within a dataset or not. Default: FALSE
 #' @param ... will pass additional parameters to getGEO, including \code{destdir}, which specifies download location
 #' 
+#' @details Note: if you get the error "Error: Couldn't find driver MySQL" then just library(RMySQL) and then re-run getGEOData
 #' @return a Pre-Analysis MetaObject containing the datasets loaded in $originalData
 #' @export
 
 getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
+  
+  #bugfix - sometimes there's a MySQL error if this isn't run
+  requireNamespace(package = "RMySQL")
   
   #Correct gses to upper case
   gseVector <- toupper(gseVector)
@@ -72,7 +76,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #GEOqueryGEO2GEM
-#~by Andrew Tam + Francesco Vallania [July 2014] + Ravi Shankar [August 2018]
+#~by Andrew Tam + Francesco Vallania [July 2014] + Ravi Shankar [August 2018] + Aditya M. Rao [2019]
 #~this will convert the GEO object to GEM for our convenience!
 #~[requires GEOquery package]
 #######################################################################################
@@ -84,50 +88,67 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   #generate expression matrix
   expr  = Biobase::exprs(GEO);
   
+  if(class(expr[,1])=='character'){
+    #return the new numeric matrix
+    exprN = matrix(as.numeric(expr),nrow = nrow(expr))
+    row.names(exprN) <- row.names(expr)
+    colnames(exprN)  <-  colnames(expr)
+    
+    #replace original expression matrix
+    expr <- exprN
+  }
+  
   #create gem object
   gem = list(name         = id, 
              load_comment = "Loaded with GEOquery");
   
-  #there is a expression matrix
-  if(dim(expr)[1]>0){
-    #parse out fData
-    fData_out <- .GEO_fData_key_parser(Biobase::fData(GEO))
-    
-    #get platform information
-    platform_info <- NA
-    if(length(GEO@annotation) > 0  && grep("^GPL",GEO@annotation)){
-      platform_info <- GEO@annotation
-    } else {
-      if("platform" %in% names(GEO@experimentData@other)) {
-        platform_info <- GEO@experimentData@other$platform
-      }
+  #parse out fData
+  fData_out <- .GEO_fData_key_parser(Biobase::fData(GEO))
+  
+  #get platform information
+  platform_info <- NA
+  if (length(GEO@annotation) > 0 && grepl("^GPL", GEO@annotation)) {
+    platform_info <- GEO@annotation
+  }
+  else {
+    if ("platform" %in% names(GEO@experimentData@other)) {
+      platform_info <- GEO@experimentData@other$platform
     }
-    
-    #update gem object
-    gem$class       = rep(0,nrow(pheno))
-    gem$expr        = expr
-    gem$exp_comment = "Data in log scale"
-    gem$keys        = fData_out$keys    
+  }
+  
+  #update gem object
+  gem$class = rep(0, nrow(pheno))
+  gem$keys = fData_out$keys
+  if(length(gem$keys)>0){
     gem$key_comment = fData_out$comment
-    gem$pheno       = pheno
-    gem$platform    = platform_info
+  }else{
+    gem$keys = NULL
+    gem$key_comment = "Annotation absent"
+  }
+  gem$pheno = pheno
+  gem$platform = platform_info
+  
+  #check if there is a expression matrix
+  if (dim(expr)[1] > 0) {
+    gem$expr = expr
+    gem$exp_comment = "Data in log scale"
     
     #check for log scale
-    if(.GEM_log_check(gem)==FALSE){
-      min_value <- min(gem$expr, na.rm = T);
+    if (.GEM_log_check(gem) == FALSE) {
+      min_value <- min(gem$expr, na.rm = T)
       
       # There is possibility of negative values in processed non-normalized 
       # data from the background subtraction algorithm. For e.g., GSE103842 (Illumina data)
       # if minimum value is negative, add small offset to all values to make them all positive
       if (min_value < 0) {
-        gem$expr <- gem$expr - min_value + 1;
+        gem$expr <- gem$expr - min_value + 1
       }
       
-      gem$expr <- log2(gem$expr);
-      gem$exp_comment = "Data was not in log scale originally";
+      gem$expr <- log2(gem$expr)
+      gem$exp_comment = "Data was not in log scale originally"
     }
     
-    # perform quantile normalization
+    # perform quantile normalization if desired
     if (qNorm == TRUE) {
       col_names <- colnames(gem$expr)
       row_names <- rownames(gem$expr)
@@ -135,10 +156,8 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
       colnames(gem$expr) <- col_names
       rownames(gem$expr) <- row_names
     }
-  }
-  else{
-    #create gem object
-    gem$exp_comment = "Expression data is missing";
+  }else{
+    gem$exp_comment = "Expression data is missing"
   }
   
   #return dataset
@@ -333,8 +352,6 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
     }
   } 
   
-  
-  
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
   #Case6-> genes are encoded in EntrezID format [use Human for this]
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
@@ -359,6 +376,26 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
     }
   }
   
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+  #Case7-> MTb case handler (Rohit) using ORF column
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+  if(is.null(keys) && check_len==1){
+    if(length(symbol_pos)<1){
+      #look for ORF column
+      orf_position <- which(names(GEO_fData)=='ORF')
+      
+      #store data in case ORF column was found
+      if(length(orf_position)>0){
+        keys        <- GEO_fData[,orf_position]
+        names(keys) <- as.character(GEO_fData[[1]])
+        comment     <- "MTb annotation with ORF"
+        #remove empty crap
+        keys[which(keys=="")] <- NA
+        
+      }
+    }
+  }
+  
   #Case 0a-> return absence even if there is a fData file
   if(is.null(keys) && check_len==1){
     symbol_pos  <- 1;
@@ -376,11 +413,13 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   keys <- gsub(";| /// ",",",keys)
   
   #remove probes that do not map back to genes
-  genes      <- .ensembl_ensgID_table()
-  fake_genes <- which(!(unlist(sapply(keys,function(i)strsplit(i,",")[[1]][1])) 
-                        %in% 
-                          genes$display_label))
-  keys[fake_genes] <- NA
+  if(comment!= "MTb annotation with ORF"){
+    genes      <- .ensembl_ensgID_table()
+    fake_genes <- which(!(unlist(sapply(keys,function(i)strsplit(i,",")[[1]][1])) 
+                          %in% 
+                            genes$display_label))
+    keys[fake_genes] <- NA
+  }
   
   #if key vector is indeed present
   if(!is.null(keys)){

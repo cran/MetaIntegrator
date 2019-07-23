@@ -145,6 +145,7 @@ immunoMeta <- immunoStatesMeta( metaObject = sleMetaAnalysis)
 immunoStates can also correct the underlying gene expression data for differences in cell proportions
 ```{r immunoStatesCorrect, eval=FALSE}
 sleMetaImmuneCorrected <- immunoStatesDecov( metaObject = sleMetaAnalysis)
+sleMetaImmuneCorrected <- immunoStatesGenePropCorr( metaObject = sleMetaImmuneCorrected)
 ```
 
 ### LINCS tools

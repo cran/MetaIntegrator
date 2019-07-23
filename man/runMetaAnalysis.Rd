@@ -33,6 +33,6 @@ runMetaAnalysis(tinyMetaObject, maxCores=1)
 \code{\link{checkDataObject}}
 }
 \author{
-Francesco Vallania
+Francesco Vallania, Aditya M. Rao
 }
 \keyword{methods}

@@ -1,7 +1,7 @@
 ---
 title: "Vignette MetaIntegrator"
 date: "`r Sys.Date()`"
-author: "Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy E. Sweeney, Erika Bongen, Purvesh Khatri"
+author: "Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy E. Sweeney, Erika Bongen, Aditya M. Rao, Purvesh Khatri"
 output:
   BiocStyle::html_document:
     toc: true
@@ -35,7 +35,7 @@ BiocStyle::markdown()
 
 ## Introduction
 
-The MetaIntegrator package comprises several analysis and plot functions to perform integrated multi-cohort analysis of gene expression data (meta-analysis). The advent of the gene expression microarray has allowed for a rapid increase in gene expression studies. Largely due to the MIAME standards for data sharing, many of these studies have been deposited into public repositories such as the NIH Gene Expression Omnibus (GEO) and ArrayExpress. There is now a wealth of publically available gene expression data available for re-analysis. 
+The MetaIntegrator package comprises several analysis and plot functions to perform integrated multi-cohort analysis of gene expression data (meta-analysis). The advent of the gene expression microarray has allowed for a rapid increase in gene expression studies. Largely due to the MIAME standards for data sharing, many of these studies have been deposited into public repositories such as the NIH Gene Expression Omnibus (GEO) and ArrayExpress. There is now a wealth of publicly available gene expression data available for re-analysis. 
 
 An obvious next step to increase statistical power in detecting changes in gene expression associated with some condition is to aggregate data from multiple studies. However, inter-study technical and biological differences prevent us from simply pooling results and summarizing our findings. A random-effects model of meta-analysis circumvents these issues by assuming that the results from each study is drawn from a single distribution, and that such inter-study differences are thus a 'random effect'. Thus, the MetaIntegrator package will perform a DerSimonian & Laird random-effects meta-analysis for each gene (not probeset) between all target studies between cases and controls; it also performs a Fischers sum-of-logs method on the same data, and requires that a gene is significant by both methods. The resulting p-values are False discovery rate (FDR) corrected to q-values, and will evaluate the hypothesis of whether each gene is differentially expressed between cases and controls across all studies included in the analysis. 
 
@@ -208,7 +208,7 @@ exampleMetaObj <- filterGenes(exampleMetaObj, isLeaveOneOut = TRUE, FDRThresh = 
 ```
 
 
-### 3. Validatation on independent validation cohorts
+### 3. Validation on independent validation cohorts
 
 #### Summarize filtered meta-analysis results with [`summarizeFilterResults()`][] 
 

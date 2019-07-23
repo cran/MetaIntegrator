@@ -26,3 +26,6 @@ sleData <- getGEOData(c("GSE11909","GSE50635", "GSE39088"))
 immunoStatesEstimates <- immunoStateMeta(sleData)
 }
 }
+\author{
+Francesco Vallania
+}

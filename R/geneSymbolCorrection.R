@@ -4,7 +4,7 @@
 #' your metaObject and updates the symbols based on the HGNChelper package, as well as correcting some other known issues.
 #' @param metaObject your metaObject
 #' @return A modified version of the input metaObject with updated gene symbols for each dataset in \code{metaObject$originalData}
-#' @author Aditya Rao
+#' @author Aditya M. Rao
 #' @examples
 #' tinyMetaObject = geneSymbolCorrection(tinyMetaObject)
 #' @export

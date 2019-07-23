@@ -4,8 +4,8 @@
 \alias{multiplePRCPlot}
 \title{Generate a plot with multiple PRC curves}
 \usage{
-multiplePRCPlot(metaObject, filterObject, title = NULL, legend.names = NULL,
-  curveColors = NULL, size = 22)
+multiplePRCPlot(metaObject, filterObject, title = NULL,
+  legend.names = NULL, curveColors = NULL, size = 22)
 }
 \arguments{
 \item{metaObject}{a metaObject which must have \code{metaObject$originalData} populated with a list of \code{datasetObjects} that will be used for discovery}
@@ -39,5 +39,5 @@ multiplePRCPlot(tinyMetaObject, filterObject =
 \code{\link{prcPlot}}, \code{\link{multipleROCPlot}}
 }
 \author{
-Aditya Rao, Andrew Bo Liu
+Aditya M. Rao, Andrew B. Liu
 }

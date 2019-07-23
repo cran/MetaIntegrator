@@ -5,10 +5,11 @@
 \title{Plot the PRC Curve for a Dataset}
 \usage{
 prcPlot(filterObject, datasetObject, title = datasetObject$formattedName,
-  subtitle = NULL, textSize = NULL, rounding = 3, curveColors = "red",
-  legend = TRUE, PRC.lty = 1, PRC.lwd = 1, backgroundColor = "gray93",
-  grid.marks = 0.1, grid.color = "white", grid.lty = 1, grid.lwd = 0.9,
-  legend.lty = 0, cex.main = 1, cex.subtitle = 0.9)
+  subtitle = NULL, textSize = NULL, rounding = 3,
+  curveColors = "red", legend = TRUE, PRC.lty = 1, PRC.lwd = 1,
+  backgroundColor = "gray93", grid.marks = 0.1, grid.color = "white",
+  grid.lty = 1, grid.lwd = 0.9, legend.lty = 0, cex.main = 1,
+  cex.subtitle = 0.9)
 }
 \arguments{
 \item{filterObject}{a metaFilter object containing the signature genes that will be used for calculating the score}
@@ -64,5 +65,5 @@ prcPlot(tinyMetaObject$filterResults[[1]], tinyMetaObject$originalData[[1]])
 \code{\link{multiplePRCPlot}}, \code{\link{rocPlot}}
 }
 \author{
-Aditya Rao & Jiaying Toh
+Aditya M. Rao, Jiaying Toh
 }

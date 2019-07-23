@@ -20,5 +20,5 @@ your metaObject and updates the symbols based on the HGNChelper package, as well
 tinyMetaObject = geneSymbolCorrection(tinyMetaObject)
 }
 \author{
-Aditya Rao
+Aditya M. Rao
 }

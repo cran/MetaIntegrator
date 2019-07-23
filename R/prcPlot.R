@@ -29,7 +29,7 @@
 #' prcPlot(tinyMetaObject$filterResults[[1]], tinyMetaObject$originalData[[1]])
 #' @export
 #' @import ROCR
-#' @author Aditya Rao & Jiaying Toh
+#' @author Aditya M. Rao, Jiaying Toh
 prcPlot <- function(filterObject, datasetObject,title = datasetObject$formattedName,
                     subtitle=NULL, textSize = NULL, rounding=3, curveColors="red", legend=TRUE, PRC.lty=1,
                     PRC.lwd=1, backgroundColor="gray93", grid.marks=0.1, grid.color="white",

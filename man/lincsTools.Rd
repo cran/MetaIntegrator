@@ -4,8 +4,9 @@
 \alias{lincsTools}
 \title{Run Shane's LINCS Tools on MetaIntegrator}
 \usage{
-lincsTools(metaObject, filterObject, report.out.folder, hit.number.hm = 10,
-  hit.number.tbl = 10, resize = F, reportTitle = "lincsReport")
+lincsTools(metaObject, filterObject, report.out.folder,
+  hit.number.hm = 10, hit.number.tbl = 10, resize = F,
+  reportTitle = "lincsReport")
 }
 \arguments{
 \item{metaObject}{a Meta object which must have the $originalData populated}

@@ -5,6 +5,7 @@
 #' @param orderByAUC if TRUE, then order legend by summary AUC. Otherwise, use default ordering.
 #' @param alphaBetaPlots if TRUE, then draw forest plots of alpha and beta. If false, suppress plotting. 
 #' 
+#' @author Timothy E. Sweeney
 #' @import ggplot2
 #' @return Generates a ROC plot for all datasets
 #' @export
@@ -35,6 +36,7 @@ summaryROCPlot <- function(metaObject, filterObject, bootstrapReps=500, orderByA
 #' @param filterObject a MetaFilter object containing the signature genes that will be used for calculating the score
 #' @param bootstrapReps number of bootstrap simulations to run for confidence interval on summary ROC
 #' 
+#' @author Timothy E. Sweeney
 #' @import ggplot2
 #' @return Summary AUC statistics
 #' @export

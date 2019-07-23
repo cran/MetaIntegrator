@@ -585,7 +585,7 @@
   typeOK <- TRUE
   
   if (type == "integer") {
-    if (!(is.numeric(object) && (object %% 1 == 0))) {
+    if (!(is.numeric(object) && all((object %% 1 == 0)))) {
       typeOK <- FALSE 
       warning("'integer' object", deparse(substitute(object))," is not a numeric integer.")
     } 

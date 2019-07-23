@@ -12,15 +12,15 @@ zeroLineColor = "black", summaryColor = "orange", textColor = "red")
 
 \item{geneName}{name of the gene for which the forest plot should be generated}
 
-\item{boxColor}{desired color for the box, default = "blue"}
+\item{boxColor}{desired color for the box (default: "blue")}
 
-\item{whiskerColor}{desired color for the whiskers, default = "lightblue"}
+\item{whiskerColor}{desired color for the whiskers (default: "lightblue")}
 
-\item{zeroLineColor}{desired color for the line indicating 0, default = "black"}
+\item{zeroLineColor}{desired color for the line indicating 0 (default: "black")}
 
-\item{summaryColor}{desired color for the diamond representing the summary effect size, default = "orange"}
+\item{summaryColor}{desired color for the diamond representing the summary effect size (default: "orange")}
 
-\item{textColor}{desired color for the text of the dataset names, default = "red"}
+\item{textColor}{desired color for the text of the dataset names (default: "red")}
 }
 \value{
 Plot to compare effect sizes of a gene across datasets

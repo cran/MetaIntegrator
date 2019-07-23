@@ -1,6 +1,12 @@
+CHANGES IN VERSION 2.1.0
+-------------------------
+NEW FEATURES
+	o New plotting function for looking at predictive values across different prevalences
+	o Improved the success rate of getGEOData
+
+
 CHANGES IN VERSION 2.0.0
 -------------------------
-
 NEW FEATURES
 	o Added functions related to immunoStates
 	o Added a variety of new plotting functions for better data visualization
@@ -8,9 +14,7 @@ NEW FEATURES
 	o Added LINCS integration
 
 
-
 CHANGES IN VERSION 0.99.0
 -------------------------
-
 NEW FEATURES
 	o This is the first development release of MetaIntegrator in Bioconductor

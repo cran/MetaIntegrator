@@ -3,7 +3,7 @@
 #' @param metaObject a MetaIntegrator formatted Meta object. 
 #' 
 #' @return Results from immunoStates stored in $originalData
-#' 
+#' @author Francesco Vallania
 #' @export
 #' @import data.table 
 #' @examples 

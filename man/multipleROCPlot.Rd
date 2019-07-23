@@ -25,3 +25,6 @@ Generate a plot with multiple ROC curves
 multipleROCPlot(tinyMetaObject, filterObject = 
    tinyMetaObject$filterResults$pValueFDR0.05_es0_nStudies1_looaTRUE_hetero0)
 }
+\author{
+Aditya M. Rao, Andrew B. Liu
+}

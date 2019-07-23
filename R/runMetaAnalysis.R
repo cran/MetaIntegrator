@@ -8,7 +8,7 @@
 #' @param runLeaveOneOutAnalysis TRUE to run leave one out analysis, FALSE otherwise (default: TRUE)
 #' @param maxCores maximum number of cores to use during analysis (default: Inf)
 #' @return modified version of the \code{metaObject} with \code{$metaAnalysis} and \code{$leaveOneOutAnalysis} populated
-#' @author Francesco Vallania
+#' @author Francesco Vallania, Aditya M. Rao
 #' @details
 #' To make sure the input is correctly formatted, the input \code{metaObject} should be checked with \code{checkDataObject(metaObject, "Meta", "Pre-Analysis")} before starting the meta-analysis.
 #' @seealso	\code{\link{checkDataObject}}

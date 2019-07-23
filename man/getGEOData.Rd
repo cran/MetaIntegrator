@@ -21,6 +21,9 @@ a Pre-Analysis MetaObject containing the datasets loaded in $originalData
 \description{
 Creates MetaIntegrator formatted objects by downloading and formatting data from GEO.
 }
+\details{
+Note: if you get the error "Error: Couldn't find driver MySQL" then just library(RMySQL) and then re-run getGEOData
+}
 \author{
-Francesco Vallania, Andrew Tam
+Francesco Vallania, Andrew Tam, Ravi Shankar, Aditya M. Rao
 }

@@ -1,8 +1,8 @@
 Package: MetaIntegrator
 Type: Package
 Title: Meta-Analysis of Gene Expression Data
-Version: 2.0.0
-Date: 2018-09-05
+Version: 2.1.0
+Date: 2019-07-22
 Author: Winston A. Haynes, Francesco Vallania, Aurelie Tomczak, Timothy Sweeney,
     Erika Bongen, Aditya M. Rao, Purvesh Khatri
 Maintainer: Aditya M. Rao <adityamr@stanford.edu>
@@ -17,14 +17,16 @@ Imports: rmeta, multtest, ggplot2, parallel, Rmisc, gplots, Biobase,
         RMySQL, DBI, stringr, preprocessCore, GEOquery, GEOmetadb,
         RSQLite, data.table, ggpubr, ROCR, zoo, pracma, COCONUT,
         Metrics, manhattanly, snplist, DT, pheatmap, plyr, boot, dplyr,
-        reshape2, rmarkdown, AnnotationDbi, HGNChelper, magrittr, readr
+        reshape2, rmarkdown, AnnotationDbi, HGNChelper, magrittr,
+        readr, plotly, httpuv
 Suggests: BiocStyle, knitr, RUnit, BiocGenerics
 VignetteBuilder: knitr
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Depends: R (>= 3.3)
+Encoding: UTF-8
 URL: http://biorxiv.org/content/early/2016/08/25/071514
 NeedsCompilation: no
-Packaged: 2018-10-05 09:21:50 UTC; adityamr
+Packaged: 2019-07-23 06:07:03 UTC; adityamr
 Repository: CRAN
-Date/Publication: 2018-10-05 15:32:30 UTC
+Date/Publication: 2019-07-23 06:20:02 UTC

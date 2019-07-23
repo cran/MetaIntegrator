@@ -4,9 +4,9 @@
 \alias{lincsCorrelate}
 \title{Run Shane's LINCS Correlate on MetaIntegrator}
 \usage{
-lincsCorrelate(metaObject, filterObject, dataset = "CP", hit.number.hm = 20,
-  direction = "reverse", cor.method = "pearson", drop.string = NULL,
-  just_clin = F, show_clin = F, gene_ann = F)
+lincsCorrelate(metaObject, filterObject, dataset = "CP",
+  hit.number.hm = 20, direction = "reverse", cor.method = "pearson",
+  drop.string = NULL, just_clin = F, show_clin = F, gene_ann = F)
 }
 \arguments{
 \item{metaObject}{a Meta object which must have the $originalData populated}

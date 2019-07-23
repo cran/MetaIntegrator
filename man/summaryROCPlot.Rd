@@ -30,3 +30,6 @@ summaryROCPlot(tinyMetaObject,filterObject =
    tinyMetaObject$filterResults$pValueFDR0.05_es0_nStudies1_looaTRUE_hetero0)
 }
 }
+\author{
+Timothy E. Sweeney
+}

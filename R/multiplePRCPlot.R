@@ -19,7 +19,7 @@
 #'    tinyMetaObject$filterResults$pValueFDR0.05_es0_nStudies1_looaTRUE_hetero0)
 #' @export
 #' @import ggplot2
-#' @author Aditya Rao, Andrew Bo Liu
+#' @author Aditya M. Rao, Andrew B. Liu
 multiplePRCPlot <- function(metaObject, filterObject, title = NULL, legend.names=NULL, curveColors=NULL, size=22){
   
   plotData = plyr::llply(metaObject$originalData, function(dataset) {.prcData(dataset, filterObject)})

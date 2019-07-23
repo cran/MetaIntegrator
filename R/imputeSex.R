@@ -15,7 +15,7 @@
 #'@details
 #' Imputes the sex of each sample in a Dataset object by performing K means
 #' clustering. If genes higher expressed in females (femGenes) and genes higher
-#' expressed in males (malGenes) are not supplied, then clutering
+#' expressed in males (malGenes) are not supplied, then clustering
 #' is performed on a default set of known X-escape genes (Tukiainen et al. 2017 Nature) 
 #' and Y-chromosome genes. 
 #' Genes were chosen as a subset of the immune Sex Expression Signature (iSEXS) (Bongen et al. In Prep.)

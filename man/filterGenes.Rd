@@ -5,7 +5,8 @@
 \title{Filter out significant genes from meta-analysis results}
 \usage{
 filterGenes(metaObject, isLeaveOneOut = TRUE, effectSizeThresh = 0,
-  FDRThresh = 0.05, numberStudiesThresh = 1, heterogeneityPvalThresh = 0)
+  FDRThresh = 0.05, numberStudiesThresh = 1,
+  heterogeneityPvalThresh = 0)
 }
 \arguments{
 \item{metaObject}{a Meta object which must have the \code{$originalData}, \code{$metaAnalysis} populated}

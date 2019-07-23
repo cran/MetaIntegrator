@@ -4,6 +4,7 @@
 #' @param title title of the plot 
 #' @param size use this to easily increase or decrease the size of all the text in the plot
 #' 
+#' @author Aditya M. Rao, Andrew B. Liu
 #' @import ggplot2
 #' @return Generates an ROC plot for all datasets
 #' @export

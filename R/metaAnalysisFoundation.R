@@ -178,7 +178,9 @@
   out$keys      <- NULL
   
   ## Next, deal with multiple keys within a study ##
-  multis       <- effects[ -singles.ind, ]
+  if(length(singles.ind)==0){
+    multis<-effects
+  }else{multis <- effects[-singles.ind, ]}
   multis$abs.z <- abs( multis$g/multis$se.g ) # used if extreme option is choosen
   
   if(nrow(multis) > 0){  # skip if no multiple ID found

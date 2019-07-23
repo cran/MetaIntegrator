@@ -4,10 +4,10 @@
 \alias{pooledROCPlot}
 \title{Generate a plot with a pooled ROC curve}
 \usage{
-pooledROCPlot(metaObject, filterObject, points = 1000, weighting = TRUE,
-  title = NULL, size = 14, rounding = 3, smoothed = FALSE,
-  auc1.thresh = 0.99, bootReps = 1000, minPoints = 5, numCores = 1,
-  method = "random")
+pooledROCPlot(metaObject, filterObject, points = 1000,
+  weighting = TRUE, title = NULL, size = 14, rounding = 3,
+  smoothed = FALSE, auc1.thresh = 0.99, bootReps = 1000,
+  minPoints = 5, numCores = 1, method = "random")
 }
 \arguments{
 \item{metaObject}{a metaObject which must have \code{metaObject$originalData} populated with a list of \code{datasetObjects} that will be used for discovery}
@@ -80,5 +80,5 @@ Kester and Buntinx, \emph{Med Decis Making}, 2000
 \code{\link{summaryROCPlot}}
 }
 \author{
-Aditya Rao (with help from Hayley Warsinske and Francesco Vallania, original idea from Madeleine Scott, and some code adapted from Tim Sweeney)
+Aditya M. Rao (with help from Hayley Warsinske and Francesco Vallania, original idea from Madeleine Scott, and some code adapted from Tim Sweeney)
 }

@@ -49,7 +49,9 @@
 #' @export
 #' @import data.table ggplot2 ROCR
 #' @references Kester and Buntinx, \emph{Med Decis Making}, 2000
-#' @author Aditya Rao (with help from Hayley Warsinske and Francesco Vallania, original idea from Madeleine Scott, and some code adapted from Tim Sweeney)
+#' @author Aditya M. Rao (with help from Hayley Warsinske and Francesco Vallania, original idea from Madeleine Scott, and some code adapted from Tim Sweeney)
+
+#NOTE: can maybe refer to this paper to justify how I average ROC curves: https://www.sciencedirect.com/science/article/pii/S016786550500303X
 pooledROCPlot <- function(metaObject,filterObject,points=1000,weighting=TRUE,title=NULL,size=14,rounding=3,
                           smoothed=FALSE,auc1.thresh=0.99,bootReps=1000,minPoints=5,numCores=1,method="random"){
 
