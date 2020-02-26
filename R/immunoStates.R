@@ -19,11 +19,27 @@
 #' }
 immunoStatesDecov <- function(metaObject){
   invisible("immunoStatesMatrix")
+  
+  #figure out if this is not a unix machine, in which case mc.cores must be 1
+  numCores = 10
+  get_os <- function() {
+    if (.Platform$OS.type == "windows") { 
+      "win"
+    } else if (Sys.info()["sysname"] == "Darwin") {
+      "mac" 
+    } else if (.Platform$OS.type == "unix") { 
+      "unix"
+    } else {
+      stop("Unknown OS")
+    }
+  }
+  if(!get_os %in% c("mac","unix")){numCores = 1}
+  
   #compute expression matrices
   iSExpMat <- mclapply(metaObject$originalData,
                        function(i)
                          .extractDataForGenesDT(i,promiscProbes = F),
-                       mc.cores = min(10,length(metaObject$originalData)))
+                       mc.cores = min(numCores,length(metaObject$originalData)))
   
   #run immunoStates and save output into a data.table
   outPut        <- lapply(iSExpMat[which(!sapply(iSExpMat,

@@ -1,6 +1,6 @@
-0e063237913ab68f6f0c8938b37aa80a *DESCRIPTION
+5c8a9c722834d4dba4316fc1c6ad681f *DESCRIPTION
 d1ab356ee2aeab74547e3b9d7053ca6f *NAMESPACE
-ed8e8543445dcc2de1cdcb10c915abfa *NEWS
+c3c500c0c7846b8e6b6454e5835f02e7 *NEWS
 c3727f8acb487f259ece24db8e0aaf6d *R/ROC_and_search_functions.R
 498aa08218abd1c8db607fa61a27c156 *R/calculatePower.R
 80b40e482032d13ac6731a1664441a4d *R/calculateScore.R
@@ -12,12 +12,12 @@ d653d871d4dff10b0c03e6c6e2317b09 *R/coconutMetaIntegrator.R
 78b132e1a4e9fada054493b4e9220e0d *R/filterGenes.R
 8b0d5fb0bc589c6a3be7d012cb686e8b *R/forestPlot.R
 0f6c5b875b24ea736f058327d540c4d6 *R/geneSymbolCorrection.R
-581285e4ba609c8ac645717fb83676d5 *R/getGEOData.R
+08bbba37cf1202ab3aacad34ce7ffe16 *R/getGEOData.R
 86819c7f9b4f9bc8a9bf26dddacec30a *R/getMostRecentFilter.R
 67a995c103fb01927339c074b070bbeb *R/getSampleLevelGeneData.R
 9578f507cf6a6fe00dd5315303923adb *R/ggForestPlot.R
 575e1c04918ae45040f8838c9fcb5596 *R/heatmapPlot.R
-519c740d1a3ce2551f479429e70982fb *R/immunoStates.R
+4e79cce6348a706d3ad221fc7f41e137 *R/immunoStates.R
 bcba5046d53012ba1cf4d2498902de3e *R/immunoStatesMeta.R
 551da672db11c31ca7a050f24b05ad97 *R/imputeSex.R
 c8df46489926c4b8f72a28a195d09c15 *R/lincsTools.R
@@ -35,7 +35,7 @@ c3023deb96182774389e39690c082487 *R/subsetOriginalData.R
 2a404b46620ac27065a4d898988b5693 *R/summarizeFilterResults.R
 b124a5737a57b6e23487eb08b304af9d *R/summaryROCPlot.R
 c4c456e5de775f1970d401687dce37fb *R/violinPlot.R
-14c9919910907d6f761258f195153dc3 *README.md
+acad46f6cfb249920305923cd4c2814a *README.md
 6d8675061583916ab62dfe50092cab00 *build/vignette.rds
 d5b5e53a875bf83583baca78b4e4be5d *data/datalist
 bce5742cdc0ba93caa5fbc514e6bb2fa *data/ens_ensgID_table.rda
@@ -45,11 +45,11 @@ a89045e8768a6f18061f92189d3df708 *data/immunoStatesMatrix.RData
 e0bd73f5122841bba7826058eeed5df3 *data/ucsc_genbank_table.rda
 04da981f84e9418391516a5033984a49 *data/ucsc_refseq_table.rda
 33938c4976a50cfbbc4ac35c7550db36 *inst/CITATION
-c4079f3681e0cbb38788d4b923e2e07f *inst/doc/MetaIntegrator.R
-e8886b9710247fed1e1a314c781e3cb8 *inst/doc/MetaIntegrator.Rmd
-fc3359738a80788753723610366cc1be *inst/doc/MetaIntegrator.html
+a9352618363ae2ac951119f1cc806d00 *inst/doc/MetaIntegrator.R
+0fca104cf4c2a254a18724151f02bcba *inst/doc/MetaIntegrator.Rmd
+4ff0bced92658635bd7bede33e865ca1 *inst/doc/MetaIntegrator.html
 514292bc9b1176a1a610ca7efa9612ec *inst/doc/MetaIntegratorRealExample.Rmd
-3d2bcda1e452ac4aff0b772a8dce45af *inst/doc/MetaIntegratorRealExample.html
+0626e157450843889225f41e47a359d1 *inst/doc/MetaIntegratorRealExample.html
 6eff2b65c9e07107a461bdd086363da0 *inst/lincsReport.Rmd
 d477fdc4788d6eaef03dfe63afdef607 *inst/unitTests/goldStandardOutput/forestPlots.pdf
 2e98673ac41ac90fb9addaa2b07aa4a7 *inst/unitTests/goldStandardOutput/rocPlots.pdf
@@ -114,7 +114,7 @@ aab57155ccc65980220eebfefc7f6bf2 *man/ucsc_genbank_table.Rd
 4e14827dd467fda6260de052eafa59bf *man/ucsc_refseq_table.Rd
 5574b3d535eb0c85c537df4efdec0dd7 *man/violinPlot.Rd
 c2588c853c4dde37c8da752b99b2978b *tests/runTests.R
-e8886b9710247fed1e1a314c781e3cb8 *vignettes/MetaIntegrator.Rmd
+0fca104cf4c2a254a18724151f02bcba *vignettes/MetaIntegrator.Rmd
 514292bc9b1176a1a610ca7efa9612ec *vignettes/MetaIntegratorRealExample.Rmd
 38d20b68612fd74bbf0a131feb37017f *vignettes/images/Eq1.png
 b1808b8d583f0a6cefb3a91587df92cb *vignettes/images/Eq2.png

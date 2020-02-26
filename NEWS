@@ -5,7 +5,8 @@ NEW FEATURES
 	o Improved the success rate of getGEOData
 PATCHES
   2.1.1 - bugfix for snplist package, which has recently stopped working on MacOS
-  
+  2.1.2 - error with log2 detection in getGEOData
+  2.1.3 - updated vignette/etc to be in line with CRAN requirements
 
 CHANGES IN VERSION 2.0.0
 -------------------------

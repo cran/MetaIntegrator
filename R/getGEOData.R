@@ -109,8 +109,7 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   platform_info <- NA
   if (length(GEO@annotation) > 0 && grepl("^GPL", GEO@annotation)) {
     platform_info <- GEO@annotation
-  }
-  else {
+  }else {
     if ("platform" %in% names(GEO@experimentData@other)) {
       platform_info <- GEO@experimentData@other$platform
     }
@@ -672,14 +671,19 @@ getGEOData <- function(gseVector, formattedNames=gseVector, qNorm=FALSE, ...){
   if(!all(is.na(cor_exp))){
     log_check_score <- log2(abs(cor_real**2 - cor_log**2)/abs(cor_real**2 - cor_exp**2))
     
-    #dataset is in log scale
-    if(log_check_score<=0){
-      return(TRUE)
+    if(length(log_check_score) > 0 && !is.nan(log_check_score)){
+      #dataset is in log scale
+      if(log_check_score<=0){
+        return(TRUE)
+      }
+      #dataset is not in log scale
+      else{
+        return(FALSE)
+      }
+    }else{
+      warning("log check failed - check to make sure this dataset is log2 normalized")
     }
-    #dataset is not in log scale
-    else{
-      return(FALSE)
-    }
+
   }else{
     
     if(cor_real > cor_log){

@@ -26,7 +26,10 @@ Run the following lines in R:
 
 where USERNAME and PASSWORD are your bitbucket username and password.  
   
-  
+
+If you get a permissions error, ask Aditya for the app password.
+
+
 If you get "ERROR: dependency ‘deapathways’ is not available for package ‘MetaIntegrator’", follow these steps:  
 
 download the `deapathways_1.0.tar.gz` file (which is stored in metaIntegrator_public/inst).

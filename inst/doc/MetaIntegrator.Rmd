@@ -18,6 +18,9 @@ vignette: >
 #setwd("../")
 library(MetaIntegrator) # <- import library
 
+#fix timezone issue (may need to run this locally)
+if(Sys.getenv("TZ") == ""){Sys.setenv(TZ='America/Los_Angeles')}
+
 # set to TRUE if R code should be executed 
 eval=TRUE
 ```
