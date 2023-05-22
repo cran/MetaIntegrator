@@ -33,7 +33,7 @@ immunoStatesDecov <- function(metaObject){
       stop("Unknown OS")
     }
   }
-  if(!get_os %in% c("mac","unix")){numCores = 1}
+  if(!get_os() %in% c("mac","unix")){numCores = 1}
   
   #compute expression matrices
   iSExpMat <- mclapply(metaObject$originalData,
